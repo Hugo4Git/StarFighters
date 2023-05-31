@@ -7,6 +7,8 @@
 ```source venv/bin/activate```
 3. Instalacja zależności
 ```pip install -r requirements.txt```
+4. Uruchomienie gry
+```python3 main.py```
 
 Aby dezaktywować wirtualne środowisko należy użyć polecenia
 ```deactivate```
