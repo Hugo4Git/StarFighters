@@ -9,6 +9,7 @@ import pygame
 # - asteroid: żeby leciały coraz szybciej z czasem
 # - asteroidy: generować pierwotną pozycję poza ekranem i kierunek tak,
 #   by astorida leciała w stronę ekranu
+# - wyliczanie rozmiarów obrazków w Asteroid oraz Spaceship
 
 class Asteroid(pygame.sprite.Sprite):
     def __init__(self, screen_size, images_paths=[os.path.join("assets", "asteroid.png")]):
@@ -48,7 +49,7 @@ class Spaceship: # TODO: should inherit from sprite?
         self.inertia = Vector2(0, 0)
         self.angle_speed = 2
         self.angle = 0
-        self._FRICTION = 0.995
+        self._FRICTION = 0.98
         self._MAX_INERTIA_LEN = 7
 
     def draw(self, display_surface):
@@ -57,27 +58,26 @@ class Spaceship: # TODO: should inherit from sprite?
         display_surface.blit(rotated_image, rect)
 
         # print(rect)
+        # rysowanie pozycji
         # pygame.draw.circle(display_surface, 'red', self.position, 3)
-
+        # rysowanie direction
         # pygame.draw.line(display_surface, 'red', self.position, self.position + self.direction * 50, 2)
+        # rysowanie inertia
         # pygame.draw.line(display_surface, 'blue', self.position, self.position + self.inertia * 50, 2)
     
-    def move (self, screen_width, screen_height):
-        keys = pygame.key.get_pressed()
-
-        if (keys[pygame.K_LEFT] or keys[ord('a')]): # and self.position[0] > 0:
+    def move(self, screen_width, screen_height, actions):
+        if(actions["left"]):
             self.angle += self.angle_speed
             self.direction.rotate_ip(-self.angle_speed)
 
-        if (keys[pygame.K_RIGHT] or keys[ord('d')]): # and self.position[0] < width - self.width:
+        if(actions["right"]):
             self.angle -= self.angle_speed
             self.direction.rotate_ip(self.angle_speed)
 
-        if (keys[pygame.K_UP] or keys[ord('w')]): # and self.position[1] > 0:
-            # self.position += self.direction * self.speed
+        if (actions["up"]):
             self.inertia += self.direction * 0.1
 
-        if (keys[pygame.K_DOWN] or keys[ord('s')]): # and self.position[1] < height - self.height:
+        if (actions["down"]):
             self.inertia -= self.direction * 0.05
 
         # max inertia
@@ -92,60 +92,188 @@ class Spaceship: # TODO: should inherit from sprite?
 
         self.position[0] %= screen_width
         self.position[1] %= screen_height
- 
-class App:
-    def __init__(self):
-        self._running = True
-        self._display_surf = None
-        self.size = self.width, self.height = 1200, 800
+
+# klasa abstrakcyjna
+class State():
+    def __init__(self, game):
+        self.game = game
+        self.prev_state = None
+
+    def update(self, actions):
+        pass
+    def render(self, display_surface):
+        pass
+
+    def enter_state(self):
+        if len(self.game.state_stack) > 1:
+            self.prev_state = self.game.state_stack[-1]
+        self.game.state_stack.append(self)
+
+    def exit_state(self):
+        self.game.state_stack.pop()
+
+class MenuScreen(State):
+    def __init__(self, game):
+        State.__init__(self, game)
+
+    def update(self, actions):
+        if actions["start"]:
+            print("MenuScreen: pressed start")
+            new_state = GameScreen(self.game)
+            new_state.enter_state()
+        self.game.reset_keys()
+
+    def render(self, display_surface):
+        display_surface.fill('green')
+        self.game.draw_text(display_surface,
+                            "Menu główne. Wciśnij ENTER by zagrać.",
+                            'black',
+                            self.game.GAME_WIDTH/2,
+                            self.game.GAME_HEIGHT/2)
+
+class GameScreen(State):
+    def __init__(self, game):
+        State.__init__(self, game)
         self.ship = Spaceship()
-        self.FRAME_RATE = 60
- 
-    def on_init(self):
-        pygame.init()
-        self._display_surf = pygame.display.set_mode(self.size, pygame.HWSURFACE
-                                                     | pygame.DOUBLEBUF)
-        self._running = True
-        self.clock = pygame.time.Clock()
-
         self.asteroid_group = pygame.sprite.Group()
- 
-    def on_event(self, event):
-        if event.type == pygame.QUIT:
-            self._running = False
 
-    def on_loop(self):
-        keys = pygame.key.get_pressed()
-        if keys[ord('q')]:
-            self.asteroid_group.add(Asteroid(self.size))
-        
+    def update(self, actions):
+        if actions["back"]:
+            print("GameScreen: pressed back")
+            self.exit_state()
+        if actions["asteroids"]:
+            print("GameScreen: Adding asteroids")
+            self.asteroid_group.add(Asteroid(self.game.GAME_SIZE))
+
         self.asteroid_group.update()
-        self.ship.move(self.width, self.height)
+        self.ship.move(game.GAME_WIDTH, game.GAME_HEIGHT, actions)
 
-        print(self.asteroid_group)
-    
-    def on_render(self):
-        self._display_surf.fill('black')
-        self.asteroid_group.draw(self._display_surf)
-        self.ship.draw(self._display_surf)
-        pygame.display.update() # or flip()
-        self.clock.tick(self.FRAME_RATE)
+        # to resetuje klawisze w każdej klatce co powoduje że trzymanie 
+        # klawiszy nie rusza statku
+        # self.game.reset_keys()
 
-    def on_cleanup(self):
-        pygame.quit()
- 
-    def on_execute(self):
-        if self.on_init() == False:
-            self._running = False
- 
-        while( self._running ):
+    def render(self, display_surface):
+        display_surface.fill('black')
+        self.asteroid_group.draw(display_surface)
+        self.ship.draw(display_surface)
+        self.game.draw_text(display_surface,
+                            "Wciśnij BACKSPACE by wrócić do menu głównego.",
+                            'white',
+                            self.game.GAME_WIDTH/2,
+                            16)
+
+class Game():
+        def __init__(self):
+            pygame.init()
+            self.GAME_SIZE = self.GAME_WIDTH, self.GAME_HEIGHT = 1200, 800
+            self.SCREEN_WIDTH, self.SCREEN_HEIGHT = 1200, 800
+            self.game_canvas = pygame.Surface((self.GAME_WIDTH, self.GAME_HEIGHT))
+            self.screen = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
+            self.running, self.playing = True, True
+            self.actions = {
+                "left": False, 
+                "right": False, 
+                "up" : False,
+                "down" : False,
+                "action1" : False,
+                "action2" : False,
+                "start" : False,
+                "back" : False,
+                "asteroids" : False
+            }
+            self.state_stack = []
+            self.load_assets()
+            self.load_states()
+
+            self.FRAME_RATE = 60
+            self.clock = pygame.time.Clock()
+
+        def game_loop(self):
+            while self.playing:
+                self.get_events()
+                self.update()
+                self.render()
+                self.clock.tick(self.FRAME_RATE)
+
+        def get_events(self):
             for event in pygame.event.get():
-                self.on_event(event)
-            self.on_loop()
-            self.on_render()
-        self.on_cleanup()
+                if event.type == pygame.QUIT:
+                    self.playing = False
+                    self.running = False
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        self.playing = False
+                        self.running = False
+                    if event.key == pygame.K_a or event.key == pygame.K_LEFT:
+                        self.actions['left'] = True
+                    if event.key == pygame.K_d or event.key == pygame.K_RIGHT:
+                        self.actions['right'] = True
+                    if event.key == pygame.K_w or event.key == pygame.K_UP:
+                        self.actions['up'] = True
+                    if event.key == pygame.K_s or event.key == pygame.K_DOWN:
+                        self.actions['down'] = True
+                    if event.key == pygame.K_p:
+                        self.actions['action1'] = True
+                    if event.key == pygame.K_o:
+                        self.actions['action2'] = True    
+                    if event.key == pygame.K_RETURN:
+                        self.actions['start'] = True  
+                    if event.key == pygame.K_BACKSPACE:
+                        self.actions['back'] = True
+                    if event.key == pygame.K_q:
+                        self.actions['asteroids'] = True    
+
+                if event.type == pygame.KEYUP:
+                    if event.key == pygame.K_a or event.key == pygame.K_LEFT:
+                        self.actions['left'] = False
+                    if event.key == pygame.K_d or event.key == pygame.K_RIGHT:
+                        self.actions['right'] = False
+                    if event.key == pygame.K_w or event.key == pygame.K_UP:
+                        self.actions['up'] = False
+                    if event.key == pygame.K_s or event.key == pygame.K_DOWN:
+                        self.actions['down'] = False
+                    if event.key == pygame.K_p:
+                        self.actions['action1'] = False
+                    if event.key == pygame.K_o:
+                        self.actions['action2'] = False
+                    if event.key == pygame.K_RETURN:
+                        self.actions['start'] = False  
+                    if event.key == pygame.K_BACKSPACE:
+                        self.actions['back'] = False
+                    if event.key == pygame.K_q:
+                        self.actions['asteroids'] = False
+
+        def update(self):
+            self.state_stack[-1].update(self.actions)
+
+        def render(self):
+            self.state_stack[-1].render(self.game_canvas)
+            # Render current state to the screen
+            self.screen.blit(pygame.transform.scale(self.game_canvas,(self.SCREEN_WIDTH, self.SCREEN_HEIGHT)), (0,0))
+            pygame.display.update()
+
+        def draw_text(self, surface, text, color, x, y):
+            text_surface = self.font.render(text, True, color)
+            #text_surface.set_colorkey((0,0,0))
+            text_rect = text_surface.get_rect()
+            text_rect.center = (x, y)
+            surface.blit(text_surface, text_rect)
+
+        def load_assets(self):
+            # Create pointers to directories 
+            self.assets_dir = os.path.join("assets")
+            self.font = pygame.font.Font(size=30)
+
+        def load_states(self):
+            self.title_screen = MenuScreen(self)
+            self.state_stack.append(self.title_screen)
+
+        def reset_keys(self):
+            for action in self.actions:
+                self.actions[action] = False
+
  
 if __name__ == "__main__" :
-    theApp = App()
-    theApp.on_execute()
+    game = Game()
+    game.game_loop()
 
