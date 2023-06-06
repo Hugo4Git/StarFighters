@@ -166,8 +166,8 @@ class Game():
             pg.init()
             self.GAME_SIZE = self.GAME_WIDTH, self.GAME_HEIGHT = 1200, 800
             self.SCREEN_SIZE = self.SCREEN_WIDTH, self.SCREEN_HEIGHT = 1200, 800
-            self.game_canvas = pg.Surface((self.GAME_WIDTH, self.GAME_HEIGHT))
-            self.screen = pg.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
+            self.game_canvas = pg.Surface(self.GAME_SIZE)
+            self.screen = pg.display.set_mode(self.SCREEN_SIZE)
             self.running, self.playing = True, True
             self.actions = {
                 "left": False, 
@@ -248,7 +248,7 @@ class Game():
         def render(self):
             self.state_stack[-1].render(self.game_canvas)
             # Render current state to the screen
-            self.screen.blit(pg.transform.scale(self.game_canvas,(self.SCREEN_WIDTH, self.SCREEN_HEIGHT)), (0,0))
+            self.screen.blit(pg.transform.scale(self.game_canvas, self.SCREEN_SIZE), (0,0))
             pg.display.update()
 
         def draw_text(self, surface, text, color, x, y):
@@ -270,6 +270,9 @@ class Game():
         def reset_keys(self):
             for action in self.actions:
                 self.actions[action] = False
+
+        def __del__():
+            pg.quit()
 
  
 if __name__ == "__main__" :
