@@ -134,7 +134,7 @@ class GameScreen(State):
         State.__init__(self, game)
         self.ship = Spaceship(game.GAME_SIZE, "yellow")
         self.asteroid_group = pg.sprite.Group()
-        self.background_image = pg.image.load(os.path.join("assets", "space.png"))
+        self.background_image = pg.transform.scale(pg.image.load(os.path.join("assets", "space.png")), game.GAME_SIZE)
 
     def update(self, actions):
         if actions["back"]:
@@ -152,7 +152,7 @@ class GameScreen(State):
         # self.game.reset_keys()
 
     def render(self, display_surface):
-        display_surface.fill('black')
+        display_surface.fill("black")
         self.asteroid_group.draw(display_surface)
         self.ship.draw(display_surface)
         self.game.draw_text(display_surface,
@@ -164,6 +164,9 @@ class GameScreen(State):
 class Game():
         def __init__(self):
             pg.init()
+            pg.mixer.init()
+            pg.mixer.music.load(os.path.join("assets", "bass.wav"))
+            pg.mixer.music.play(-1)
             self.GAME_SIZE = self.GAME_WIDTH, self.GAME_HEIGHT = 1200, 800
             self.SCREEN_SIZE = self.SCREEN_WIDTH, self.SCREEN_HEIGHT = 1200, 800
             self.game_canvas = pg.Surface(self.GAME_SIZE)
@@ -271,7 +274,7 @@ class Game():
             for action in self.actions:
                 self.actions[action] = False
 
-        def __del__():
+        def __del__(self):
             pg.quit()
 
  
