@@ -1,7 +1,9 @@
 import pygame as pg
+import pygame
 import pygame_gui
 from random import uniform
 import os
+import time
 
 # TODO
 # - asteroidy: żeby asteroid pojawiało się coraz więcej z czasem
@@ -9,6 +11,10 @@ import os
 # - asteroidy: generować pierwotną pozycję poza ekranem i kierunek tak,
 #   by astorida leciała w stronę ekranu
 # - wyliczanie rozmiarów obrazków w Asteroid oraz Spaceship
+
+# TODO
+# this should be changed, but I don't know where to put this
+SHIP_PICKED = pg.event.custom_type()
 
 class Asteroid(pg.sprite.Sprite):
     def __init__(self, screen_size, images_paths=[os.path.join("assets", "asteroid.png")]):
@@ -116,7 +122,7 @@ class State():
 
 class MenuScreen(State):
     def __init__(self, game):
-        State.__init__(self, game)
+        super().__init__(game)
         s = self.game.SCALE
 
         # logo
@@ -148,7 +154,7 @@ class MenuScreen(State):
         )
     
     def play(self):
-        new_state = GameScreen(self.game)
+        new_state = ShipChoiceMenu(self.game)
         new_state.enter_state()
 
     def process_event(self, event):
@@ -180,10 +186,165 @@ class MenuScreen(State):
                             16)
         super().render(display_surface)
 
+# Przycisk z obrazkiem w środku
+class ImagePanelButton(pygame_gui.elements.UIPanel):
+    def __init__(
+            self,
+            relative_rect,
+            manager,
+            padding,
+            image_surface,
+            text,
+            container = None
+        ):
+        pygame_gui.elements.UIPanel.__init__(
+            self,
+            relative_rect=relative_rect,
+            manager=manager,
+            container=container
+        )
+        self.button = pygame_gui.elements.UIButton(
+            relative_rect=pg.Rect((0, 0), relative_rect.size),
+            text=text,
+            manager=manager,
+            container=self,
+        )
+        image_rect = pg.Rect(padding/2, padding/2,
+                             relative_rect.width - padding,
+                             relative_rect.height - padding)
+        self.shipimage =  pygame_gui.elements.UIImage(
+            relative_rect=image_rect,
+            image_surface=image_surface,
+            manager=manager,
+            container=self
+        )
+
+class ShipChoiceWindow(pygame_gui.elements.UIWindow):
+    def __init__(self, rect, manager, scale):
+        s = scale
+        super().__init__(
+            rect=rect,
+            window_display_title='Wybierz statek',
+            manager=manager,
+            resizable=False,
+            draggable=False,
+            visible=False
+        )
+        super().set_blocking(True)
+        # obrazki statków
+        image = pg.image.load(os.path.join("assets", "yellow.png")).convert_alpha()
+        self.ship1_combi = ImagePanelButton(
+            relative_rect=pg.Rect(0, 0, 200*s, 200*s),
+            manager=manager,
+            container=self,
+            padding=30*s,
+            image_surface=image,
+            text=''
+        )
+        # przycisk do anulowania
+        rect = pg.Rect(0, 0, 200*s, 70*s)
+        rect.centerx = 960*s
+        rect.centery = 950*s
+        self.cancel_button = pygame_gui.elements.UIButton(
+            relative_rect=rect,
+            text='Anuluj',
+            manager=manager,
+            container=self
+        )
+
+        self.chosen_ship = None
+
+    # nie wiem, dlaczego to nie działa. wcześniej działało
+    def on_close_window_button_pressed(self):
+        self.hide()
+
+    def process_event(self, event):
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.ui_element == self.cancel_button:
+                self.hide()
+            elif event.ui_element == self.ship1_combi.button:
+                event_data = {'ship_name': 'yellow',
+                              'ui_element': self,
+                              'ui_object_id': self.most_specific_combined_id}
+                pg.event.post(pg.event.Event(SHIP_PICKED, event_data))
+                self.hide()
+
+class ShipChoiceMenu(State):
+    def __init__(self, game):
+        super().__init__(game)
+        s = self.game.SCALE
+
+        # TODO
+        ship_button_width, ship_button_height = 300, 300
+        rect = pg.Rect(0, 0, ship_button_width*s, ship_button_height*s)
+        rect.topleft = (200, 200)
+        self.player1_ship = ImagePanelButton(
+            relative_rect=rect,
+            manager=self.uimanager,
+            image_surface=self.game.player1_ship['image_surface'],
+            padding=30*s,
+            text='hello',
+        )
+
+        # tworzenie przycisków
+        self.change_button = pygame_gui.elements.UIButton(
+            relative_rect=pg.Rect(500, 200, 200, 100),
+            text='Zmień',
+            manager=self.uimanager
+        )
+        button_width, button_height = 400, 70
+        gap = 10
+        rect = pg.Rect(0, 0, button_width*s, button_height*s)
+        rect.topleft = ((960 + gap/2)*s, 950*s)
+        self.play_button = pygame_gui.elements.UIButton(
+            relative_rect=rect,
+            text='Graj',
+            manager=self.uimanager
+        )
+        rect.topright = ((960 - gap/2)*s, rect.topright[1])
+        self.back_button = pygame_gui.elements.UIButton(
+            relative_rect=rect,
+            text='Wróć',
+            manager=self.uimanager
+        )
+
+        self.choice_window = ShipChoiceWindow(
+            rect=pg.Rect(0, 0, self.game.GAME_WIDTH*s, self.game.GAME_HEIGHT*s),
+            manager=self.uimanager,
+            scale=s
+        )
+
+    def play(self):
+        new_state = GameScreen(self.game)
+        new_state.enter_state()
+
+    def process_event(self, event):
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.ui_element == self.play_button:
+                self.play()
+            elif event.ui_element == self.back_button:
+                self.exit_state()
+            elif event.ui_element == self.change_button:
+                self.choice_window.show()
+        elif event.type == SHIP_PICKED:
+            print(f'wybrany statek to {event.ship_name}')
+        self.uimanager.process_events(event)
+        if self.choice_window != None:
+            self.choice_window.process_event(event)
+    
+    def render(self, display_surface):
+        display_surface.fill((0, 13, 107))
+        self.game.draw_text(display_surface,
+                            "Menu wybierania statku.",
+                            'white',
+                            self.game.GAME_WIDTH/2,
+                            16)
+        super().render(display_surface)
+
 class GameScreen(State):
     def __init__(self, game):
         State.__init__(self, game)
-        self.ship = Spaceship(game.GAME_SIZE, "yellow")
+        self.ship = Spaceship(game.GAME_SIZE, game.player1_ship['name'])
         self.asteroid_group = pg.sprite.Group()
         self.background_image = pg.transform.scale(pg.image.load(os.path.join("assets", "space.png")), game.GAME_SIZE)
 
@@ -240,6 +401,7 @@ class Game():
             self.state_stack = []
             self.load_assets()
             self.load_states()
+            self.load_player_ships()
 
             self.FRAME_RATE = 60
             self.clock = pg.time.Clock()
@@ -321,6 +483,13 @@ class Game():
             # Create pointers to directories 
             self.assets_dir = os.path.join("assets")
             self.font = pg.font.Font(size=30)
+        
+        def load_player_ships(self):
+            self.player1_ship = {
+                'name': 'yellow',
+                'image_surface': pg.image.load(
+                                    os.path.join("assets", "yellow.png"))
+            }
 
         def load_states(self):
             self.title_screen = MenuScreen(self)
