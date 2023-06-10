@@ -125,6 +125,11 @@ class MenuScreen(State):
         super().__init__(game)
         s = self.game.SCALE
 
+        # tło
+        self.background = pg.image.load(
+                            os.path.join("assets", "background2.png")) \
+                          .convert_alpha()
+
         # logo
         self.logo_image = \
             pg.image.load(os.path.join("assets", "logo.png")).convert_alpha()
@@ -176,7 +181,8 @@ class MenuScreen(State):
         self.game.reset_keys()
 
     def render(self, display_surface):
-        display_surface.fill((0, 13, 107))
+        # display_surface.fill((0, 13, 107))
+        display_surface.blit(self.background, (0, 0))
         rect = self.logo_image.get_rect(center = (960, 300))
         display_surface.blit(self.logo_image, rect)
         self.game.draw_text(display_surface,
@@ -305,6 +311,12 @@ class ShipChoiceMenu(State):
         super().__init__(game)
         s = self.game.SCALE
 
+        # tło
+        self.background = pg.image.load(
+                            os.path.join("assets", "background2.png")) \
+                          .convert_alpha()
+
+        # statki
         self.ship_gap = 30
         self.ship_button_width, self.ship_button_height = 300, 322
         rect = pg.Rect(0, 0,
@@ -327,7 +339,7 @@ class ShipChoiceMenu(State):
             text='',
         )
 
-        # tworzenie przycisków
+        # przyciski graj i wróć
         button_width, button_height = 400, 70
         gap = 10
         rect = pg.Rect(0, 0, button_width*s, button_height*s)
@@ -376,7 +388,7 @@ class ShipChoiceMenu(State):
         self.uimanager.process_events(event)
     
     def render(self, display_surface):
-        display_surface.fill((0, 13, 107))
+        display_surface.blit(self.background, (0, 0))
         self.game.draw_text(display_surface,
                             "Menu wybierania statku.",
                             'white',
@@ -394,6 +406,12 @@ class ShipChoiceMenu(State):
                             960 + self.ship_button_width + self.ship_gap,
                             280,
                             self.game.retro_font_28)
+        self.game.draw_text(display_surface,
+                            "Wybierzcie swoje statki",
+                            'azure',
+                            960,
+                            140,
+                            self.game.retro_font_36)
         super().render(display_surface)
 
 class GameScreen(State):
@@ -401,7 +419,9 @@ class GameScreen(State):
         State.__init__(self, game)
         self.ship = Spaceship(game.GAME_SIZE, game.player1_ship['name'])
         self.asteroid_group = pg.sprite.Group()
-        self.background_image = pg.transform.scale(pg.image.load(os.path.join("assets", "space.png")), game.GAME_SIZE)
+        self.background = pg.image.load(
+                            os.path.join("assets", "space.png")) \
+                          .convert_alpha()
 
     def update(self, actions):
         if actions["back"]:
@@ -419,14 +439,15 @@ class GameScreen(State):
         # self.game.reset_keys()
 
     def render(self, display_surface):
-        display_surface.fill("black")
+        display_surface.blit(self.background, (0, 0))
         self.asteroid_group.draw(display_surface)
         self.ship.draw(display_surface)
         self.game.draw_text(display_surface,
                             "Wciśnij BACKSPACE by wrócić do menu głównego.",
                             'white',
                             self.game.GAME_WIDTH/2,
-                            16)
+                            16,
+                            self.game.retro_font_20)
 
 class Game():
         def __init__(self):
@@ -545,6 +566,9 @@ class Game():
             self.retro_font_28 = pg.font.Font(
                                    os.path.join("assets", "PublicPixel.ttf"),
                                    28)
+            self.retro_font_36 = pg.font.Font(
+                                   os.path.join("assets", "PublicPixel.ttf"),
+                                   36)
             self.SHIPS = [ 
                 {
                     'name': 'yellow',
