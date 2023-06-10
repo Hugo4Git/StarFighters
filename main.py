@@ -119,6 +119,10 @@ class MenuScreen(State):
         State.__init__(self, game)
         s = self.game.SCALE
 
+        # logo
+        self.logo_image = \
+            pg.image.load(os.path.join("assets", "logo.png")).convert_alpha()
+
         # tworzenie menu głównego
         button_width, button_height = 400, 70
         gap = 10
@@ -166,12 +170,14 @@ class MenuScreen(State):
         self.game.reset_keys()
 
     def render(self, display_surface):
-        display_surface.fill((43, 52, 103))
+        display_surface.fill((0, 13, 107))
+        rect = self.logo_image.get_rect(center = (960, 300))
+        display_surface.blit(self.logo_image, rect)
         self.game.draw_text(display_surface,
                             "Menu główne. Wciśnij ENTER by zagrać.",
                             'white',
                             self.game.GAME_WIDTH/2,
-                            self.game.GAME_HEIGHT/2)
+                            16)
         super().render(display_surface)
 
 class GameScreen(State):
