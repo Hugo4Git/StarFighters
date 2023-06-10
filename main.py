@@ -1,4 +1,5 @@
 import pygame as pg
+import pygame_gui
 from random import uniform
 import os
 
@@ -96,11 +97,14 @@ class State():
     def __init__(self, game):
         self.game = game
         self.prev_state = None
+        self.uimanager = pygame_gui.UIManager(self.game.SCREEN_SIZE)
 
+    def process_event(self, event):
+        pass
     def update(self, actions):
-        pass
+        self.uimanager.update(self.game.time_delta)
     def render(self, display_surface):
-        pass
+        self.uimanager.draw_ui(self.game.screen)
 
     def enter_state(self):
         if len(self.game.state_stack) > 1:
@@ -113,21 +117,62 @@ class State():
 class MenuScreen(State):
     def __init__(self, game):
         State.__init__(self, game)
+        s = self.game.SCALE
+
+        # tworzenie menu głównego
+        button_width, button_height = 400, 70
+        gap = 10
+        rect = pg.Rect(0, 0, button_width*s, button_height*s)
+        rect.centerx = 960*s
+        rect.centery = 650*s
+        self.play_button = pygame_gui.elements.UIButton(
+            relative_rect=rect,
+            text='Graj',
+            manager=self.uimanager
+        )
+        rect.centery += (gap + button_height)*s
+        self.options_button = pygame_gui.elements.UIButton(
+            relative_rect=rect,
+            text='Opcje',
+            manager=self.uimanager
+        )
+        rect.centery += (gap + button_height)*s
+        self.exit_button = pygame_gui.elements.UIButton(
+            relative_rect=rect,
+            text='Wyjdź',
+            manager=self.uimanager
+        )
+    
+    def play(self):
+        new_state = GameScreen(self.game)
+        new_state.enter_state()
+
+    def process_event(self, event):
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.ui_element == self.play_button:
+                self.play()
+            elif event.ui_element == self.options_button:
+                print('Kliknięto opcje')
+            elif event.ui_element == self.exit_button:
+                self.game.running = False
+                self.game.playing = False
+        self.uimanager.process_events(event)
 
     def update(self, actions):
+        super().update(actions)
         if actions["start"]:
             print("MenuScreen: pressed start")
-            new_state = GameScreen(self.game)
-            new_state.enter_state()
+            self.play()
         self.game.reset_keys()
 
     def render(self, display_surface):
-        display_surface.fill('green')
+        display_surface.fill((43, 52, 103))
         self.game.draw_text(display_surface,
                             "Menu główne. Wciśnij ENTER by zagrać.",
-                            'black',
+                            'white',
                             self.game.GAME_WIDTH/2,
                             self.game.GAME_HEIGHT/2)
+        super().render(display_surface)
 
 class GameScreen(State):
     def __init__(self, game):
@@ -167,8 +212,11 @@ class Game():
             pg.mixer.init()
             pg.mixer.music.load(os.path.join("assets", "bass.wav"))
             pg.mixer.music.play(-1)
-            self.GAME_SIZE = self.GAME_WIDTH, self.GAME_HEIGHT = 1200, 800
-            self.SCREEN_SIZE = self.SCREEN_WIDTH, self.SCREEN_HEIGHT = 1200, 800
+            self.GAME_SIZE = self.GAME_WIDTH, self.GAME_HEIGHT = 1920, 1080
+            self.SCALE = 2 / 3
+            self.SCREEN_SIZE = self.SCREEN_WIDTH, self.SCREEN_HEIGHT = \
+                (int(self.GAME_WIDTH * self.SCALE),
+                 int(self.GAME_HEIGHT * self.SCALE))
             self.game_canvas = pg.Surface(self.GAME_SIZE)
             self.screen = pg.display.set_mode(self.SCREEN_SIZE)
             self.running, self.playing = True, True
@@ -190,12 +238,13 @@ class Game():
             self.FRAME_RATE = 60
             self.clock = pg.time.Clock()
 
+
         def game_loop(self):
             while self.playing:
+                self.time_delta = self.clock.tick(self.FRAME_RATE)
                 self.get_events()
                 self.update()
                 self.render()
-                self.clock.tick(self.FRAME_RATE)
 
         def get_events(self):
             for event in pg.event.get():
@@ -245,13 +294,14 @@ class Game():
                     if event.key == pg.K_q:
                         self.actions['asteroids'] = False
 
+                self.state_stack[-1].process_event(event)
+
         def update(self):
             self.state_stack[-1].update(self.actions)
 
         def render(self):
+            self.screen.blit(pg.transform.smoothscale(self.game_canvas, self.SCREEN_SIZE), (0,0))
             self.state_stack[-1].render(self.game_canvas)
-            # Render current state to the screen
-            self.screen.blit(pg.transform.scale(self.game_canvas, self.SCREEN_SIZE), (0,0))
             pg.display.update()
 
         def draw_text(self, surface, text, color, x, y):
