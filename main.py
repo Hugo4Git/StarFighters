@@ -31,6 +31,7 @@ class Spaceship(pg.sprite.Sprite):
         self._MAX_INERTIA_LEN = 7
         self.controls = controls
         self.reload = 0
+        self.life = 3
         self.rect = self.image.get_rect()
         self.rect.center = self.position
 
@@ -56,13 +57,18 @@ class Spaceship(pg.sprite.Sprite):
         self.position[1] %= self.screen.get_height()
         self.image = pg.transform.rotate(self.original, self.angle)
         self.rect = self.image.get_rect(center = self.position)
+        self.life -= len(pg.sprite.spritecollide(self, bullets, True))
+        if self.life <= 0:
+            self.kill()
+
+
 
 class Bullet(pg.sprite.Sprite):
     def __init__(self, screen, position, direction):
         super().__init__()
         self.image = pg.image.load(os.path.join("assets", "bullet.png")).convert_alpha()
         self.screen = screen
-        self.position = position + direction*50
+        self.position = position + direction*100
         self.inertia = direction*8
         self.rect = self.image.get_rect()
         self.rect.center = self.position
