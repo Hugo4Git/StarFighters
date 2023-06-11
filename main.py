@@ -22,7 +22,8 @@ class Spaceship(pg.sprite.Sprite):
         self.original = color
         self.image = self.original
         self.screen = screen
-        self.position = pg.Vector2(screen.get_width()/2, screen.get_height()/2)
+        self.position = pg.Vector2(uniform(0, screen.get_width()),
+                                    uniform(0, screen.get_height()))
         self.direction = pg.Vector2(0, -1)
         self.inertia = pg.Vector2(0, 0)
         self.angle_speed = 3
