@@ -25,11 +25,11 @@ class Spaceship(pg.sprite.Sprite):
         self._MAX_INERTIA_LEN = 7
         self.controls = controls
         self.reload = 0
-        self.life = 3
+        self.life = 5
         self.rect = self.image.get_rect()
         self.rect.center = self.position
 
-    def update(self, actions, bullets):
+    def update(self, actions, bullets, asteroids):
         if (actions[self.controls[0]]):
             self.inertia += self.direction * 0.2
         if(actions[self.controls[1]]):
@@ -52,10 +52,9 @@ class Spaceship(pg.sprite.Sprite):
         self.image = pg.transform.rotate(self.original, self.angle)
         self.rect = self.image.get_rect(center = self.position)
         self.life -= len(pg.sprite.spritecollide(self, bullets, True))
+        self.life -= len(pg.sprite.spritecollide(self, asteroids, True))
         if self.life <= 0:
             self.kill()
-
-
 
 class Bullet(pg.sprite.Sprite):
     def __init__(self, screen, position, direction):
@@ -444,7 +443,7 @@ class GameScreen(State):
             self.asteroids.add(Asteroid(self.game.GAME_SIZE))
             self.last_asteroid = int(time.time())
 
-        self.ships.update(actions, self.bullets)
+        self.ships.update(actions, self.bullets, self.asteroids)
         self.bullets.update()
         self.asteroids.update()
 
