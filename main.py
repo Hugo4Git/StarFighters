@@ -94,9 +94,9 @@ class Asteroid(pg.sprite.Sprite):
         self.image = pg.transform.scale(self.image, size)
 
         self.rect = self.image.get_rect()
-        self.rect.center = (uniform(0, screen_size[0]), uniform(0, screen_size[1]))
+        self.rect.center = (uniform(0, screen_size[0]), 0)
 
-        self._inertia = pg.Vector2(uniform(-1, 1), uniform(-1, 1))
+        self._inertia = pg.Vector2(uniform(-0.8, 0.8), uniform(0.2, 1))
         MIN_INERTIA_LENGTH = 2
         MAX_INERTIA_LENGTH = 4
         inertia_length = uniform(MIN_INERTIA_LENGTH, MAX_INERTIA_LENGTH)
@@ -441,14 +441,15 @@ class GameScreen(State):
         self.background = pg.image.load(
                             os.path.join("assets", "space.png")) \
                           .convert_alpha()
+        self.last_asteroid = 0
 
     def update(self, actions):
         if actions["back"]:
             print("GameScreen: pressed back")
             self.exit_state()
-        if actions["asteroids"]:
-            print("GameScreen: Adding asteroids")
+        if int(time.time()) > self.last_asteroid:
             self.asteroids.add(Asteroid(self.game.GAME_SIZE))
+            self.last_asteroid = int(time.time())
 
         self.ships.update(actions, self.bullets)
         self.bullets.update()
@@ -495,7 +496,6 @@ class Game():
                 "space" : False,
                 "start" : False,
                 "back" : False,
-                "asteroids" : False
             }
             self.state_stack = []
             self.load_assets()
@@ -549,9 +549,7 @@ class Game():
                     if event.key == pg.K_RETURN:
                         self.actions['start'] = True  
                     if event.key == pg.K_BACKSPACE:
-                        self.actions['back'] = True
-                    if event.key == pg.K_f:
-                        self.actions['asteroids'] = True    
+                        self.actions['back'] = True  
                 if event.type == pg.KEYUP:
                     if event.key == pg.K_LEFT:
                         self.actions['left'] = False
@@ -581,8 +579,6 @@ class Game():
                         self.actions['start'] = False  
                     if event.key == pg.K_BACKSPACE:
                         self.actions['back'] = False
-                    if event.key == pg.K_f:
-                        self.actions['asteroids'] = False
 
                 self.state_stack[-1].process_event(event)
 
