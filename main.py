@@ -390,7 +390,7 @@ class ShipChoiceMenu(State):
                 self.player1_ship.set_image(event.ship['image_surface'])
             elif (event.playerid == self.game.PLAYER2_ID):
                 self.game.player2_ship = event.ship
-                self.player1_ship.set_image(event.ship['image_surface'])
+                self.player2_ship.set_image(event.ship['image_surface'])
             print(f'wybrany statek to {event.ship} dla gracza {event.playerid}')
         self.uimanager.process_events(event)
     
