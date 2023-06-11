@@ -29,7 +29,7 @@ class Spaceship(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = self.position
 
-    def update(self, actions, bullets, asteroids):
+    def update(self, actions, bullets, asteroids, bangs):
         if (actions[self.controls[0]]):
             self.inertia += self.direction * 0.2
         if(actions[self.controls[1]]):
@@ -51,10 +51,14 @@ class Spaceship(pg.sprite.Sprite):
         self.position[1] %= self.screen.get_height()
         self.image = pg.transform.rotate(self.original, self.angle)
         self.rect = self.image.get_rect(center = self.position)
-        self.life -= len(pg.sprite.spritecollide(self, bullets, True))
-        self.life -= len(pg.sprite.spritecollide(self, asteroids, True))
-        if self.life <= 0:
-            self.kill()
+
+        colisions = len(pg.sprite.spritecollide(self, bullets, True)) 
+        colisions += len(pg.sprite.spritecollide(self, asteroids, True))
+        if colisions:
+            self.life -= colisions
+            bangs.add(Bang(self.position))
+            if self.life <= 0:
+                self.kill()
 
 class Bullet(pg.sprite.Sprite):
     def __init__(self, screen, position, direction):
@@ -66,7 +70,7 @@ class Bullet(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = self.position
 
-    def update(self):
+    def update(self, asteroids):
         self.rect.center += self.inertia
         if (
             self.rect.centerx < -self.rect.width or
@@ -74,6 +78,8 @@ class Bullet(pg.sprite.Sprite):
             self.rect.centerx > self.screen.get_width() + self.rect.width or
             self.rect.centery > self.screen.get_height() + self.rect.height
         ):
+            self.kill()
+        if pg.sprite.spritecollide(self, asteroids, True):
             self.kill()
 
 class Asteroid(pg.sprite.Sprite):
@@ -103,6 +109,27 @@ class Asteroid(pg.sprite.Sprite):
         ):
             self.kill()
         self.rect.center += self._inertia
+
+class Bang(pg.sprite.Sprite):
+    def __init__(self, position):
+        super().__init__()
+        self.images = [pg.image.load(x) for x in [os.path.join("assets", "bang.png"),
+                       os.path.join("assets", "smallbang.png"),
+                       os.path.join("assets", "supersmallbang.png")]]
+        self.image = self.images[2]
+        self.stime = time.time()
+        self.rect = self.image.get_rect(center = position)
+
+    def update(self):
+        if time.time() > self.stime + 0.1:
+            self.image = self.images[1]
+        if time.time() > self.stime + 0.2:
+            self.image = self.images[0]
+        if time.time() > self.stime + 0.3:
+            self.kill()
+
+
+
 
 # klasa abstrakcyjna
 class State():
@@ -430,6 +457,7 @@ class GameScreen(State):
                                  ['w', 'a', 's', 'd', 'q']))
         self.bullets = pg.sprite.Group()
         self.asteroids = pg.sprite.Group()
+        self.bangs = pg.sprite.Group()
         self.background = pg.image.load(
                             os.path.join("assets", "space.png")) \
                           .convert_alpha()
@@ -443,15 +471,17 @@ class GameScreen(State):
             self.asteroids.add(Asteroid(self.game.GAME_SIZE))
             self.last_asteroid = int(time.time())
 
-        self.ships.update(actions, self.bullets, self.asteroids)
-        self.bullets.update()
+        self.ships.update(actions, self.bullets, self.asteroids, self.bangs)
+        self.bullets.update(self.asteroids)
         self.asteroids.update()
+        self.bangs.update()
 
     def render(self, screen):
         screen.blit(self.background, (0, 0))
         self.ships.draw(screen)
         self.bullets.draw(screen)
         self.asteroids.draw(screen)
+        self.bangs.draw(screen)
         self.game.draw_text(screen,
                             "Wciśnij BACKSPACE by wrócić do menu głównego.",
                             'white',
