@@ -19,7 +19,7 @@ SHIP_PICKED = pg.event.custom_type()
 class Spaceship(pg.sprite.Sprite):
     def __init__(self, screen, color, controls):
         super().__init__()
-        self.original = pg.image.load(os.path.join("assets", color + ".png")).convert_alpha()
+        self.original = color
         self.image = self.original
         self.screen = screen
         self.position = pg.Vector2(screen.get_width()/2, screen.get_height()/2)
@@ -425,9 +425,9 @@ class GameScreen(State):
     def __init__(self, game):
         State.__init__(self, game)
         self.ships = pg.sprite.Group()
-        self.ships.add(Spaceship(game.game_canvas, game.player1_ship['name'], 
+        self.ships.add(Spaceship(game.game_canvas, game.player1_ship['image_surface'], 
                                  ['up', 'left', 'down', 'right', 'space']))
-        self.ships.add(Spaceship(game.game_canvas, game.player2_ship['name'], 
+        self.ships.add(Spaceship(game.game_canvas, game.player2_ship['image_surface'], 
                                  ['w', 'a', 's', 'd', 'q']))
         self.bullets = pg.sprite.Group()
         self.asteroids = pg.sprite.Group()
