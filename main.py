@@ -16,6 +16,67 @@ import time
 # this should be changed, but I don't know where to put this
 SHIP_PICKED = pg.event.custom_type()
 
+class Spaceship(pg.sprite.Sprite):
+    def __init__(self, screen, color, controls):
+        super().__init__()
+        self.original = pg.image.load(os.path.join("assets", color + ".png")).convert_alpha()
+        self.image = self.original
+        self.screen = screen
+        self.position = pg.Vector2(screen.get_width()/2, screen.get_height()/2)
+        self.direction = pg.Vector2(0, -1)
+        self.inertia = pg.Vector2(0, 0)
+        self.angle_speed = 3
+        self.angle = 0
+        self._FRICTION = 0.98
+        self._MAX_INERTIA_LEN = 7
+        self.controls = controls
+        self.reload = 0
+        self.rect = self.image.get_rect()
+        self.rect.center = self.position
+
+    def update(self, actions, bullets):
+        if (actions[self.controls[0]]):
+            self.inertia += self.direction * 0.2
+        if(actions[self.controls[1]]):
+            self.angle += self.angle_speed
+            self.direction.rotate_ip(-self.angle_speed)
+        if (actions[self.controls[2]]):
+            self.inertia -= self.direction * 0.1
+        if(actions[self.controls[3]]):
+            self.angle -= self.angle_speed
+            self.direction.rotate_ip(self.angle_speed)
+        if(actions[self.controls[4]] and self.reload + 0.5 < time.time()):
+            bullets.add(Bullet(self.screen, self.position.copy(), self.direction.copy()))
+            self.reload = time.time()
+        if (self.inertia.length() > self._MAX_INERTIA_LEN):
+            self.inertia *= self._MAX_INERTIA_LEN / self.inertia.length()
+        self.position += self.inertia
+        self.inertia *= self._FRICTION
+        self.position[0] %= self.screen.get_width()
+        self.position[1] %= self.screen.get_height()
+        self.image = pg.transform.rotate(self.original, self.angle)
+        self.rect = self.image.get_rect(center = self.position)
+
+class Bullet(pg.sprite.Sprite):
+    def __init__(self, screen, position, direction):
+        super().__init__()
+        self.image = pg.image.load(os.path.join("assets", "bullet.png")).convert_alpha()
+        self.screen = screen
+        self.position = position + direction*50
+        self.inertia = direction*8
+        self.rect = self.image.get_rect()
+        self.rect.center = self.position
+
+    def update(self):
+        self.rect.center += self.inertia
+        if (
+            self.rect.centerx < -self.rect.width or
+            self.rect.centery < -self.rect.height or
+            self.rect.centerx > self.screen.get_width() + self.rect.width or
+            self.rect.centery > self.screen.get_height() + self.rect.height
+        ):
+            self.kill()
+
 class Asteroid(pg.sprite.Sprite):
     def __init__(self, screen_size, images_paths=[os.path.join("assets", "asteroid.png")]):
         super().__init__()
@@ -43,60 +104,6 @@ class Asteroid(pg.sprite.Sprite):
         ):
             self.kill()
         self.rect.center += self._inertia
-
-class Spaceship: # TODO: should inherit from sprite?
-    def __init__(self, screen_size, color):
-        #size = (80, 80)
-        self.image = pg.image.load(os.path.join("assets", color + ".png"))
-        #self.image = pg.transform.scale(self.image, size)
-        self.position = pg.Vector2(screen_size[0]/2, screen_size[1]/2)
-        self.direction = pg.Vector2(0, -1)
-        self.inertia = pg.Vector2(0, 0)
-        self.angle_speed = 2
-        self.angle = 0
-        self._FRICTION = 0.98
-        self._MAX_INERTIA_LEN = 7
-
-    def draw(self, display_surface):
-        rotated_image = pg.transform.rotate(self.image, self.angle)
-        rect = rotated_image.get_rect(center = self.position)
-        display_surface.blit(rotated_image, rect)
-
-        # print(rect)
-        # rysowanie pozycji
-        # pg.draw.circle(display_surface, 'red', self.position, 3)
-        # rysowanie direction
-        # pg.draw.line(display_surface, 'red', self.position, self.position + self.direction * 50, 2)
-        # rysowanie inertia
-        # pg.draw.line(display_surface, 'blue', self.position, self.position + self.inertia * 50, 2)
-    
-    def move(self, screen_width, screen_height, actions):
-        if(actions["left"]):
-            self.angle += self.angle_speed
-            self.direction.rotate_ip(-self.angle_speed)
-
-        if(actions["right"]):
-            self.angle -= self.angle_speed
-            self.direction.rotate_ip(self.angle_speed)
-
-        if (actions["up"]):
-            self.inertia += self.direction * 0.1
-
-        if (actions["down"]):
-            self.inertia -= self.direction * 0.05
-
-        # max inertia
-        if (self.inertia.length() > self._MAX_INERTIA_LEN):
-            self.inertia *= self._MAX_INERTIA_LEN / self.inertia.length()
-
-        # move according to inertia
-        self.position += self.inertia
-
-        # apply friction
-        self.inertia *= self._FRICTION
-
-        self.position[0] %= screen_width
-        self.position[1] %= screen_height
 
 # klasa abstrakcyjna
 class State():
@@ -417,8 +424,13 @@ class ShipChoiceMenu(State):
 class GameScreen(State):
     def __init__(self, game):
         State.__init__(self, game)
-        self.ship = Spaceship(game.GAME_SIZE, game.player1_ship['name'])
-        self.asteroid_group = pg.sprite.Group()
+        self.ships = pg.sprite.Group()
+        self.ships.add(Spaceship(game.game_canvas, game.player1_ship['name'], 
+                                 ['up', 'left', 'down', 'right', 'space']))
+        self.ships.add(Spaceship(game.game_canvas, game.player2_ship['name'], 
+                                 ['w', 'a', 's', 'd', 'q']))
+        self.bullets = pg.sprite.Group()
+        self.asteroids = pg.sprite.Group()
         self.background = pg.image.load(
                             os.path.join("assets", "space.png")) \
                           .convert_alpha()
@@ -429,20 +441,18 @@ class GameScreen(State):
             self.exit_state()
         if actions["asteroids"]:
             print("GameScreen: Adding asteroids")
-            self.asteroid_group.add(Asteroid(self.game.GAME_SIZE))
+            self.asteroids.add(Asteroid(self.game.GAME_SIZE))
 
-        self.asteroid_group.update()
-        self.ship.move(game.GAME_WIDTH, game.GAME_HEIGHT, actions)
+        self.ships.update(actions, self.bullets)
+        self.bullets.update()
+        self.asteroids.update()
 
-        # to resetuje klawisze w każdej klatce co powoduje że trzymanie 
-        # klawiszy nie rusza statku
-        # self.game.reset_keys()
-
-    def render(self, display_surface):
-        display_surface.blit(self.background, (0, 0))
-        self.asteroid_group.draw(display_surface)
-        self.ship.draw(display_surface)
-        self.game.draw_text(display_surface,
+    def render(self, screen):
+        screen.blit(self.background, (0, 0))
+        self.ships.draw(screen)
+        self.bullets.draw(screen)
+        self.asteroids.draw(screen)
+        self.game.draw_text(screen,
                             "Wciśnij BACKSPACE by wrócić do menu głównego.",
                             'white',
                             self.game.GAME_WIDTH/2,
@@ -463,13 +473,19 @@ class Game():
             self.game_canvas = pg.Surface(self.GAME_SIZE)
             self.screen = pg.display.set_mode(self.SCREEN_SIZE)
             self.running, self.playing = True, True
+
             self.actions = {
-                "left": False, 
-                "right": False, 
                 "up" : False,
+                "left": False, 
                 "down" : False,
-                "action1" : False,
-                "action2" : False,
+                "right": False, 
+                "w" : False,
+                "a" : False,
+                "s" : False,
+                "d" : False,
+                "a" : False,
+                "q" : False,
+                "space" : False,
                 "start" : False,
                 "back" : False,
                 "asteroids" : False
@@ -499,14 +515,26 @@ class Game():
                     if event.key == pg.K_ESCAPE:
                         self.playing = False
                         self.running = False
-                    if event.key == pg.K_a or event.key == pg.K_LEFT:
+                    if event.key == pg.K_LEFT:
                         self.actions['left'] = True
-                    if event.key == pg.K_d or event.key == pg.K_RIGHT:
+                    if event.key == pg.K_RIGHT:
                         self.actions['right'] = True
-                    if event.key == pg.K_w or event.key == pg.K_UP:
+                    if event.key == pg.K_UP:
                         self.actions['up'] = True
-                    if event.key == pg.K_s or event.key == pg.K_DOWN:
+                    if event.key == pg.K_DOWN:
                         self.actions['down'] = True
+                    if event.key == pg.K_SPACE:
+                        self.actions['space'] = True
+                    if event.key == pg.K_w:
+                        self.actions['w'] = True
+                    if event.key == pg.K_a:
+                        self.actions['a'] = True
+                    if event.key == pg.K_s:
+                        self.actions['s'] = True
+                    if event.key == pg.K_d:
+                        self.actions['d'] = True
+                    if event.key == pg.K_q:
+                        self.actions['q'] = True
                     if event.key == pg.K_p:
                         self.actions['action1'] = True
                     if event.key == pg.K_o:
@@ -515,18 +543,29 @@ class Game():
                         self.actions['start'] = True  
                     if event.key == pg.K_BACKSPACE:
                         self.actions['back'] = True
-                    if event.key == pg.K_q:
+                    if event.key == pg.K_f:
                         self.actions['asteroids'] = True    
-
                 if event.type == pg.KEYUP:
-                    if event.key == pg.K_a or event.key == pg.K_LEFT:
+                    if event.key == pg.K_LEFT:
                         self.actions['left'] = False
-                    if event.key == pg.K_d or event.key == pg.K_RIGHT:
+                    if event.key == pg.K_RIGHT:
                         self.actions['right'] = False
-                    if event.key == pg.K_w or event.key == pg.K_UP:
+                    if event.key == pg.K_UP:
                         self.actions['up'] = False
-                    if event.key == pg.K_s or event.key == pg.K_DOWN:
+                    if event.key == pg.K_DOWN:
                         self.actions['down'] = False
+                    if event.key == pg.K_SPACE:
+                        self.actions['space'] = False
+                    if event.key == pg.K_w:
+                        self.actions['w'] = False
+                    if event.key == pg.K_a:
+                        self.actions['a'] = False
+                    if event.key == pg.K_s:
+                        self.actions['s'] = False
+                    if event.key == pg.K_d:
+                        self.actions['d'] = False
+                    if event.key == pg.K_q:
+                        self.actions['q'] = False
                     if event.key == pg.K_p:
                         self.actions['action1'] = False
                     if event.key == pg.K_o:
@@ -535,7 +574,7 @@ class Game():
                         self.actions['start'] = False  
                     if event.key == pg.K_BACKSPACE:
                         self.actions['back'] = False
-                    if event.key == pg.K_q:
+                    if event.key == pg.K_f:
                         self.actions['asteroids'] = False
 
                 self.state_stack[-1].process_event(event)
@@ -574,6 +613,36 @@ class Game():
                     'name': 'yellow',
                     'image_surface': pg.image.load(
                                         os.path.join("assets", "yellow.png")).
+                                        convert_alpha()
+                },
+                {
+                    'name': 'blue',
+                    'image_surface': pg.image.load(
+                                        os.path.join("assets", "blue.png")).
+                                        convert_alpha()
+                },
+                {
+                    'name': 'purple',
+                    'image_surface': pg.image.load(
+                                        os.path.join("assets", "purple.png")).
+                                        convert_alpha()
+                },
+                {
+                    'name': 'green',
+                    'image_surface': pg.image.load(
+                                        os.path.join("assets", "green.png")).
+                                        convert_alpha()
+                },
+                {
+                    'name': 'red',
+                    'image_surface': pg.image.load(
+                                        os.path.join("assets", "red.png")).
+                                        convert_alpha()
+                },
+                {
+                    'name': 'brown',
+                    'image_surface': pg.image.load(
+                                        os.path.join("assets", "brown.png")).
                                         convert_alpha()
                 },
                 {
