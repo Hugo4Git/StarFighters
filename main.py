@@ -6,13 +6,6 @@ import os
 import time
 
 # TODO
-# - asteroidy: żeby asteroid pojawiało się coraz więcej z czasem
-# - asteroid: żeby leciały coraz szybciej z czasem
-# - asteroidy: generować pierwotną pozycję poza ekranem i kierunek tak,
-#   by astorida leciała w stronę ekranu
-# - wyliczanie rozmiarów obrazków w Asteroid oraz Spaceship
-
-# TODO
 # this should be changed, but I don't know where to put this
 SHIP_PICKED = pg.event.custom_type()
 
