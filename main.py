@@ -154,6 +154,47 @@ class State():
     def exit_state(self):
         self.game.state_stack.pop()
 
+class ControlsScreen(State):
+    def __init__(self, game):
+        super().__init__(game)
+        s = self.game.SCALE
+
+        # tło
+        self.background = pg.image.load(
+                            os.path.join("assets", "background2.png")) \
+                          .convert_alpha()
+
+        # tworzenie menu głównego
+        button_width, button_height = 400, 70
+        gap = 10
+        rect = pg.Rect(0, 0, button_width*s, button_height*s)
+        rect.centerx = 960*s
+        rect.centery = 950*s
+        self.back_button = pygame_gui.elements.UIButton(
+            relative_rect=rect,
+            text='Wróć',
+            manager=self.uimanager,
+            object_id=pygame_gui.core.ObjectID(class_id='@menu_buttons')
+        )
+    
+    def process_event(self, event):
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.ui_element == self.back_button:
+                self.exit_state()
+        self.uimanager.process_events(event)
+
+    def update(self, actions):
+        super().update(actions)
+        self.game.reset_keys()
+
+    def render(self, display_surface):
+        display_surface.blit(self.background, (0, 0))
+        controls_image = pg.image.load(
+                            os.path.join("assets", "controls.png")) \
+                          .convert_alpha()
+        display_surface.blit(controls_image, (0, 0))
+        super().render(display_surface)
+
 class MenuScreen(State):
     def __init__(self, game):
         super().__init__(game)
@@ -181,9 +222,9 @@ class MenuScreen(State):
             object_id=pygame_gui.core.ObjectID(class_id='@menu_buttons')
         )
         rect.centery += (gap + button_height)*s
-        self.options_button = pygame_gui.elements.UIButton(
+        self.controls_button = pygame_gui.elements.UIButton(
             relative_rect=rect,
-            text='Opcje',
+            text='Sterowanie',
             manager=self.uimanager,
             object_id=pygame_gui.core.ObjectID(class_id='@menu_buttons')
         )
@@ -199,12 +240,17 @@ class MenuScreen(State):
         new_state = ShipChoiceMenu(self.game)
         new_state.enter_state()
 
+    def controls(self):
+        new_state = ControlsScreen(self.game)
+        new_state.enter_state()
+
     def process_event(self, event):
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == self.play_button:
                 self.play()
-            elif event.ui_element == self.options_button:
-                print('Kliknięto opcje')
+            elif event.ui_element == self.controls_button:
+                print('Kliknięto sterowanie')
+                self.controls()
             elif event.ui_element == self.exit_button:
                 self.game.running = False
                 self.game.playing = False
