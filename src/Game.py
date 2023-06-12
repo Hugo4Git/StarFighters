@@ -150,8 +150,12 @@ class Game():
                 'purple',
                 'green',
                 'red',
-                'brown',
-                'lime'
+                # 'brown',
+                'lime',
+                'cyan',
+                'magenta',
+                'xwing-green',
+                'xwing-red'
             ]
             self.SHIPS = [
                 {
