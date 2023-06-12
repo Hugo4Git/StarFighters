@@ -39,7 +39,7 @@ class ControlsScreen(State):
 
         # tło
         self.background = pg.image.load(
-                            os.path.join("assets", "background2.png")) \
+                            os.path.join("assets", "backgrounds", "background.png")) \
                           .convert_alpha()
 
         button_width, button_height = 400, 70
@@ -133,7 +133,7 @@ class MenuScreen(State):
 
         # tło
         self.background = pg.image.load(
-                            os.path.join("assets", "background2.png")) \
+                            os.path.join("assets", "backgrounds", "background.png")) \
                           .convert_alpha()
 
         # logo
@@ -289,7 +289,7 @@ class ShipChoiceMenu(State):
 
         # tło
         self.background = pg.image.load(
-                            os.path.join("assets", "background2.png")) \
+                            os.path.join("assets", "backgrounds", "background.png")) \
                           .convert_alpha()
 
         # statki
@@ -415,7 +415,7 @@ class GameScreen(State):
         self.asteroids = pg.sprite.Group()
         self.bangs = pg.sprite.Group()
         self.background = pg.image.load(
-                            os.path.join("assets", "space.png")) \
+                            os.path.join("assets", "backgrounds", "space.png")) \
                           .convert_alpha()
         self.last_asteroid = 0
 

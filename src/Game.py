@@ -148,43 +148,43 @@ class Game():
                 {
                     'name': 'yellow',
                     'image_surface': pg.image.load(
-                                        os.path.join("assets", "yellow.png")).
+                                        os.path.join("assets", "ships", "yellow.png")).
                                         convert_alpha()
                 },
                 {
                     'name': 'blue',
                     'image_surface': pg.image.load(
-                                        os.path.join("assets", "blue.png")).
+                                        os.path.join("assets", "ships", "blue.png")).
                                         convert_alpha()
                 },
                 {
                     'name': 'purple',
                     'image_surface': pg.image.load(
-                                        os.path.join("assets", "purple.png")).
+                                        os.path.join("assets", "ships", "purple.png")).
                                         convert_alpha()
                 },
                 {
                     'name': 'green',
                     'image_surface': pg.image.load(
-                                        os.path.join("assets", "green.png")).
+                                        os.path.join("assets", "ships", "green.png")).
                                         convert_alpha()
                 },
                 {
                     'name': 'red',
                     'image_surface': pg.image.load(
-                                        os.path.join("assets", "red.png")).
+                                        os.path.join("assets", "ships", "red.png")).
                                         convert_alpha()
                 },
                 {
                     'name': 'brown',
                     'image_surface': pg.image.load(
-                                        os.path.join("assets", "brown.png")).
+                                        os.path.join("assets", "ships", "brown.png")).
                                         convert_alpha()
                 },
                 {
                     'name': 'lime',
                     'image_surface': pg.image.load(
-                                        os.path.join("assets", "lime.png"))
+                                        os.path.join("assets", "ships", "lime.png"))
                                         .convert_alpha()
                 }
             ]
