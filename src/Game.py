@@ -144,49 +144,25 @@ class Game():
             self.retro_font_36 = pg.font.Font(
                                    os.path.join("assets", "PublicPixel.ttf"),
                                    36)
-            self.SHIPS = [ 
+            SHIP_NAMES = [
+                'yellow',
+                'blue',
+                'purple',
+                'green',
+                'red',
+                'brown',
+                'lime'
+            ]
+            self.SHIPS = [
                 {
-                    'name': 'yellow',
+                    'name': name,
                     'image_surface': pg.image.load(
-                                        os.path.join("assets", "ships", "yellow.png")).
+                                        os.path.join("assets",
+                                                     "ships",
+                                                     f"{name}.png")).
                                         convert_alpha()
-                },
-                {
-                    'name': 'blue',
-                    'image_surface': pg.image.load(
-                                        os.path.join("assets", "ships", "blue.png")).
-                                        convert_alpha()
-                },
-                {
-                    'name': 'purple',
-                    'image_surface': pg.image.load(
-                                        os.path.join("assets", "ships", "purple.png")).
-                                        convert_alpha()
-                },
-                {
-                    'name': 'green',
-                    'image_surface': pg.image.load(
-                                        os.path.join("assets", "ships", "green.png")).
-                                        convert_alpha()
-                },
-                {
-                    'name': 'red',
-                    'image_surface': pg.image.load(
-                                        os.path.join("assets", "ships", "red.png")).
-                                        convert_alpha()
-                },
-                {
-                    'name': 'brown',
-                    'image_surface': pg.image.load(
-                                        os.path.join("assets", "ships", "brown.png")).
-                                        convert_alpha()
-                },
-                {
-                    'name': 'lime',
-                    'image_surface': pg.image.load(
-                                        os.path.join("assets", "ships", "lime.png"))
-                                        .convert_alpha()
                 }
+                for name in SHIP_NAMES
             ]
         
         def load_players(self):
