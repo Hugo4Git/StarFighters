@@ -7,15 +7,16 @@ import time
 # TODO
 # this should be changed, but I don't know where to put this
 SHIP_PICKED = pg.event.custom_type()
+GAME_OVER = pg.event.custom_type()
 
 class Spaceship(pg.sprite.Sprite):
-    def __init__(self, screen, color, controls):
+    def __init__(self, screen, color, controls, playerid):
         super().__init__()
         self.original = color
         self.image = self.original
         self.screen = screen
         self.position = pg.Vector2(uniform(0, screen.get_width()),
-                                    uniform(0, screen.get_height()))
+                                   uniform(0, screen.get_height()))
         self.direction = pg.Vector2(0, -1)
         self.inertia = pg.Vector2(0, 0)
         self.angle_speed = 3
@@ -27,6 +28,7 @@ class Spaceship(pg.sprite.Sprite):
         self.life = 5
         self.rect = self.image.get_rect()
         self.rect.center = self.position
+        self.playerid = playerid
 
     def update(self, actions, bullets, asteroids, bangs):
         if (actions[self.controls[0]]):
@@ -58,6 +60,8 @@ class Spaceship(pg.sprite.Sprite):
             bangs.add(Bang(self.position))
             if self.life <= 0:
                 self.kill()
+                event_data = { 'killed_playerid': self.playerid }
+                pg.event.post(pg.event.Event(GAME_OVER, event_data))
 
 class Bullet(pg.sprite.Sprite):
     def __init__(self, screen, position, direction):
@@ -150,8 +154,9 @@ class State():
             self.prev_state = self.game.state_stack[-1]
         self.game.state_stack.append(self)
 
-    def exit_state(self):
-        self.game.state_stack.pop()
+    def exit_state(self, count=1):
+        for i in range(count):
+            self.game.state_stack.pop()
 
 class ControlsScreen(State):
     def __init__(self, game):
@@ -163,9 +168,7 @@ class ControlsScreen(State):
                             os.path.join("assets", "background2.png")) \
                           .convert_alpha()
 
-        # tworzenie menu głównego
         button_width, button_height = 400, 70
-        gap = 10
         rect = pg.Rect(0, 0, button_width*s, button_height*s)
         rect.centerx = 960*s
         rect.centery = 950*s
@@ -192,6 +195,52 @@ class ControlsScreen(State):
                             os.path.join("assets", "controls.png")) \
                           .convert_alpha()
         display_surface.blit(controls_image, (0, 0))
+        super().render(display_surface)
+
+class GameOverScreen(State):
+    def __init__(self, game, winnerid):
+        super().__init__(game)
+        s = self.game.SCALE
+        self.winnerid = winnerid
+
+        button_width, button_height = 400, 70
+        rect = pg.Rect(0, 0, button_width*s, button_height*s)
+        rect.centerx = 960*s
+        rect.centery = 600*s
+        self.back_button = pygame_gui.elements.UIButton(
+            relative_rect=rect,
+            text='Wróć do menu',
+            manager=self.uimanager,
+            object_id=pygame_gui.core.ObjectID(class_id='@menu_buttons')
+        )
+    
+    def process_event(self, event):
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.ui_element == self.back_button:
+                self.exit_state(2)
+        self.uimanager.process_events(event)
+
+    def update(self, actions):
+        super().update(actions)
+        self.game.reset_keys()
+    
+    def playerid_to_name(self, playerid):
+        if playerid == self.game.PLAYER1_ID:
+            return "Gracz 1"
+        elif playerid == self.game.PLAYER2_ID:
+            return "Gracz 2"
+
+    def render(self, display_surface):
+        bg_rect = pg.Rect(0, 0, 600, 230)
+        bg_rect.center = (self.game.GAME_WIDTH/2, self.game.GAME_HEIGHT/2 + 20)
+        bg_color = (2, 27, 136)
+        pg.draw.rect(display_surface, bg_color, bg_rect)
+        self.game.draw_text(display_surface,
+                            f'Wygrał {self.playerid_to_name(self.winnerid)}',
+                            'white',
+                            self.game.GAME_WIDTH/2,
+                            500,
+                            self.game.retro_font_36)
         super().render(display_surface)
 
 class MenuScreen(State):
@@ -504,9 +553,11 @@ class GameScreen(State):
         State.__init__(self, game)
         self.ships = pg.sprite.Group()
         self.ships.add(Spaceship(game.game_canvas, game.player1_ship['image_surface'], 
-                                 ['up', 'left', 'down', 'right', 'space']))
+                                 ['w', 'a', 's', 'd', 'q'],
+                                 game.PLAYER1_ID))
         self.ships.add(Spaceship(game.game_canvas, game.player2_ship['image_surface'], 
-                                 ['w', 'a', 's', 'd', 'q']))
+                                 ['up', 'left', 'down', 'right', 'space'],
+                                 game.PLAYER2_ID))
         self.bullets = pg.sprite.Group()
         self.asteroids = pg.sprite.Group()
         self.bangs = pg.sprite.Group()
@@ -514,6 +565,19 @@ class GameScreen(State):
                             os.path.join("assets", "space.png")) \
                           .convert_alpha()
         self.last_asteroid = 0
+
+    def game_over(self, loser_id):
+        winner_id = self.game.PLAYER2_ID \
+                    if loser_id == self.game.PLAYER1_ID \
+                    else self.game.PLAYER1_ID
+        # print(f'przegral gracz o id {loser_id}')
+        # print(f'wygral gracz o id {winner_id}')
+        new_state = GameOverScreen(game, winner_id)
+        new_state.enter_state()
+
+    def process_event(self, event):
+        if event.type == GAME_OVER:
+            self.game_over(event.killed_playerid)
 
     def update(self, actions):
         if actions["back"]:
