@@ -199,12 +199,6 @@ class MenuScreen(State):
         display_surface.blit(self.background, (0, 0))
         rect = self.logo_image.get_rect(center = (960, 300))
         display_surface.blit(self.logo_image, rect)
-        self.game.draw_text(display_surface,
-                            "Menu główne. Wciśnij ENTER by zagrać.",
-                            'white',
-                            self.game.GAME_WIDTH/2,
-                            16,
-                            self.game.retro_font_20)
         super().render(display_surface)
 
 class ShipChoiceWindow(pygame_gui.elements.UIWindow):
@@ -381,11 +375,6 @@ class ShipChoiceMenu(State):
     def render(self, display_surface):
         display_surface.blit(self.background, (0, 0))
         self.game.draw_text(display_surface,
-                            "Menu wybierania statku.",
-                            'white',
-                            self.game.GAME_WIDTH/2,
-                            16)
-        self.game.draw_text(display_surface,
                             "Statek gracza 1",
                             'azure',
                             960 - self.ship_button_width - self.ship_gap,
@@ -456,9 +445,3 @@ class GameScreen(State):
         self.bullets.draw(screen)
         self.asteroids.draw(screen)
         self.bangs.draw(screen)
-        self.game.draw_text(screen,
-                            "Wciśnij BACKSPACE by wrócić do menu głównego.",
-                            'white',
-                            self.game.GAME_WIDTH/2,
-                            16,
-                            self.game.retro_font_20)
