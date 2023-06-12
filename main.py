@@ -136,7 +136,8 @@ class State():
     def __init__(self, game):
         self.game = game
         self.prev_state = None
-        self.uimanager = pygame_gui.UIManager(self.game.SCREEN_SIZE)
+        self.uimanager = pygame_gui.UIManager(self.game.SCREEN_SIZE,
+                                              os.path.join("themes", "theme.json"))
 
     def process_event(self, event):
         pass
@@ -176,19 +177,22 @@ class MenuScreen(State):
         self.play_button = pygame_gui.elements.UIButton(
             relative_rect=rect,
             text='Graj',
-            manager=self.uimanager
+            manager=self.uimanager,
+            object_id=pygame_gui.core.ObjectID(class_id='@menu_buttons')
         )
         rect.centery += (gap + button_height)*s
         self.options_button = pygame_gui.elements.UIButton(
             relative_rect=rect,
             text='Opcje',
-            manager=self.uimanager
+            manager=self.uimanager,
+            object_id=pygame_gui.core.ObjectID(class_id='@menu_buttons')
         )
         rect.centery += (gap + button_height)*s
         self.exit_button = pygame_gui.elements.UIButton(
             relative_rect=rect,
             text='Wyjdź',
-            manager=self.uimanager
+            manager=self.uimanager,
+            object_id=pygame_gui.core.ObjectID(class_id='@menu_buttons')
         )
     
     def play(self):
@@ -306,7 +310,8 @@ class ShipChoiceWindow(pygame_gui.elements.UIWindow):
             relative_rect=rect,
             text='Anuluj',
             manager=manager,
-            container=self
+            container=self,
+            object_id=pygame_gui.core.ObjectID(class_id='@menu_buttons')
         )
 
         self.chosen_ship = None
@@ -381,13 +386,15 @@ class ShipChoiceMenu(State):
         self.play_button = pygame_gui.elements.UIButton(
             relative_rect=rect,
             text='Graj',
-            manager=self.uimanager
+            manager=self.uimanager,
+            object_id=pygame_gui.core.ObjectID(class_id='@menu_buttons')
         )
         rect.topright = ((960 - gap/2)*s, rect.topright[1])
         self.back_button = pygame_gui.elements.UIButton(
             relative_rect=rect,
             text='Wróć',
-            manager=self.uimanager
+            manager=self.uimanager,
+            object_id=pygame_gui.core.ObjectID(class_id='@menu_buttons')
         )
 
         self.choice_window = ShipChoiceWindow(
