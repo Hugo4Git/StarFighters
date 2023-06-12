@@ -280,6 +280,7 @@ class ShipChoiceWindow(pygame_gui.elements.UIWindow):
         self.ships = ships
         self.ships_image_buttons = []
         next_x_pos, next_y_pos = gap*s, gap*s
+        x_gap = 77
         ship_button_width, ship_button_height = 300, 322
         for ship in ships:
             self.ships_image_buttons.append(ImagePanelButton(
@@ -292,10 +293,10 @@ class ShipChoiceWindow(pygame_gui.elements.UIWindow):
                 image_surface=ship['image_surface'],
                 text='',
             ))
-            next_x_pos += ship_button_width*s + gap*s
-            if (next_x_pos >= rect.width):
-                next_x_pos = 0
-                next_y_pos += ship_button_width*s + gap*s
+            next_x_pos += ship_button_width*s + x_gap*s
+            if (next_x_pos + ship_button_width*s >= rect.width - gap*s):
+                next_x_pos = gap*s
+                next_y_pos += ship_button_height*s + gap*s
 
         # przycisk do anulowania
         rect = pg.Rect(0, 0, 200*s, 70*s)
