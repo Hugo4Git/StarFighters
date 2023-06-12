@@ -170,8 +170,8 @@ class ControlsScreen(State):
 
         button_width, button_height = 400, 70
         rect = pg.Rect(0, 0, button_width*s, button_height*s)
-        rect.centerx = 960*s
-        rect.centery = 950*s
+        rect.centerx = 510*s
+        rect.centery = 850*s
         self.back_button = pygame_gui.elements.UIButton(
             relative_rect=rect,
             text='Wróć',
@@ -187,6 +187,9 @@ class ControlsScreen(State):
 
     def update(self, actions):
         super().update(actions)
+        if actions["back"]:
+            self.game.reset_keys()
+            self.exit_state()
         self.game.reset_keys()
 
     def render(self, display_surface):
@@ -213,15 +216,21 @@ class GameOverScreen(State):
             manager=self.uimanager,
             object_id=pygame_gui.core.ObjectID(class_id='@menu_buttons')
         )
+
+    def exit_screen(self):
+        self.exit_state(2)
     
     def process_event(self, event):
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == self.back_button:
-                self.exit_state(2)
+                self.exit_screen()
         self.uimanager.process_events(event)
 
     def update(self, actions):
         super().update(actions)
+        if actions["start"] or actions["back"]:
+            self.game.reset_keys()
+            self.exit_screen()
         self.game.reset_keys()
     
     def playerid_to_name(self, playerid):
@@ -297,7 +306,6 @@ class MenuScreen(State):
             if event.ui_element == self.play_button:
                 self.play()
             elif event.ui_element == self.controls_button:
-                print('Kliknięto sterowanie')
                 self.controls()
             elif event.ui_element == self.exit_button:
                 self.game.running = False
@@ -307,7 +315,7 @@ class MenuScreen(State):
     def update(self, actions):
         super().update(actions)
         if actions["start"]:
-            print("MenuScreen: pressed start")
+            self.game.reset_keys()
             self.play()
         self.game.reset_keys()
 
@@ -423,7 +431,6 @@ class ShipChoiceWindow(pygame_gui.elements.UIWindow):
     def process_event(self, event):
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == self.cancel_button:
-                print('cancel button')
                 self.reset()
             for i, ship in enumerate(self.ships_image_buttons):
                 if event.ui_element == ship.button:
@@ -518,9 +525,18 @@ class ShipChoiceMenu(State):
             elif (event.playerid == self.game.PLAYER2_ID):
                 self.game.player2_ship = event.ship
                 self.player2_ship.set_image(event.ship['image_surface'])
-            print(f'wybrany statek to {event.ship} dla gracza {event.playerid}')
         self.uimanager.process_events(event)
-    
+
+    def update(self, actions):
+        super().update(actions)
+        if actions["start"]:
+            self.game.reset_keys()
+            self.play()
+        elif actions["back"]:
+            self.game.reset_keys()
+            self.exit_state()
+        self.game.reset_keys()
+
     def render(self, display_surface):
         display_surface.blit(self.background, (0, 0))
         self.game.draw_text(display_surface,
@@ -570,8 +586,6 @@ class GameScreen(State):
         winner_id = self.game.PLAYER2_ID \
                     if loser_id == self.game.PLAYER1_ID \
                     else self.game.PLAYER1_ID
-        # print(f'przegral gracz o id {loser_id}')
-        # print(f'wygral gracz o id {winner_id}')
         new_state = GameOverScreen(game, winner_id)
         new_state.enter_state()
 
@@ -581,7 +595,7 @@ class GameScreen(State):
 
     def update(self, actions):
         if actions["back"]:
-            print("GameScreen: pressed back")
+            self.game.reset_keys()
             self.exit_state()
         if int(time.time()) > self.last_asteroid:
             self.asteroids.add(Asteroid(self.game.GAME_SIZE))
