@@ -84,7 +84,7 @@ class GameOverScreen(State):
         button_width, button_height = 400, 70
         rect = pg.Rect(0, 0, button_width*s, button_height*s)
         rect.centerx = 960*s
-        rect.centery = 600*s
+        rect.centery = 680*s
         self.back_button = pygame_gui.elements.UIButton(
             relative_rect=rect,
             text='Wróć do menu',
@@ -114,17 +114,34 @@ class GameOverScreen(State):
         elif playerid == self.game.PLAYER2_ID:
             return "Gracz 2"
 
+    def get_ship(self, playerid):
+        if playerid == self.game.PLAYER1_ID:
+            return self.game.player1_ship
+        elif playerid == self.game.PLAYER2_ID:
+            return self.game.player2_ship
+
     def render(self, display_surface):
-        bg_rect = pg.Rect(0, 0, 600, 230)
-        bg_rect.center = (self.game.GAME_WIDTH/2, self.game.GAME_HEIGHT/2 + 20)
-        bg_color = (2, 27, 136)
+        bg_rect = pg.Rect(0, 0, 950, 430)
+        bg_rect.center = (self.game.GAME_WIDTH/2, self.game.GAME_HEIGHT/2 + 10)
+        bg_color = 'azure'
         pg.draw.rect(display_surface, bg_color, bg_rect)
+
+        message = f'Wygrał {self.playerid_to_name(self.winnerid)} statkiem:'
         self.game.draw_text(display_surface,
-                            f'Wygrał {self.playerid_to_name(self.winnerid)}',
-                            'white',
+                            message,
+                            'black',
                             self.game.GAME_WIDTH/2,
-                            500,
+                            400,
                             self.game.retro_font_36)
+
+        ship_width, ship_height = 150, 161
+        rect = pg.Rect(0, 0, ship_width, ship_height)
+        rect.center = (self.game.GAME_WIDTH/2, self.game.GAME_HEIGHT/2)
+        scaled_ship = pg.transform.smoothscale( 
+            self.get_ship(self.winnerid)['image_surface'],
+            (ship_width, ship_height)
+        )
+        display_surface.blit(scaled_ship, rect)
         super().render(display_surface)
 
 class MenuScreen(State):
