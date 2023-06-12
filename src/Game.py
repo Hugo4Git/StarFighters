@@ -122,7 +122,9 @@ class Game():
             self.state_stack[-1].update(self.actions)
 
         def render(self):
-            self.screen.blit(pg.transform.smoothscale(self.game_canvas, self.SCREEN_SIZE), (0,0))
+            self.screen.blit(pg.transform.smoothscale(self.game_canvas,
+                                                      self.SCREEN_SIZE),
+                                                      (0,0))
             self.state_stack[-1].render(self.game_canvas)
             pg.display.update()
 

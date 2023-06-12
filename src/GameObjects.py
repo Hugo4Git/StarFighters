@@ -37,7 +37,9 @@ class Spaceship(pg.sprite.Sprite):
             self.angle -= self.angle_speed
             self.direction.rotate_ip(self.angle_speed)
         if(actions[self.controls[4]] and self.reload + 0.5 < time.time()):
-            bullets.add(Bullet(self.screen, self.position.copy(), self.direction.copy()))
+            bullets.add(Bullet(self.screen,
+                               self.position.copy(),
+                               self.direction.copy()))
             self.reload = time.time()
         if (self.inertia.length() > self._MAX_INERTIA_LEN):
             self.inertia *= self._MAX_INERTIA_LEN / self.inertia.length()
@@ -61,7 +63,8 @@ class Spaceship(pg.sprite.Sprite):
 class Bullet(pg.sprite.Sprite):
     def __init__(self, screen, position, direction):
         super().__init__()
-        self.image = pg.image.load(os.path.join("assets", "bullet.png")).convert_alpha()
+        self.image = \
+            pg.image.load(os.path.join("assets", "bullet.png")).convert_alpha()
         self.screen = screen
         self.position = position + direction*100
         self.inertia = direction*8
@@ -81,7 +84,9 @@ class Bullet(pg.sprite.Sprite):
             self.kill()
 
 class Asteroid(pg.sprite.Sprite):
-    def __init__(self, screen_size, images_paths=[os.path.join("assets", "asteroid.png")]):
+    def __init__(self,
+                 screen_size,
+                 images_paths=[os.path.join("assets", "asteroid.png")]):
         super().__init__()
         self._screen_size = screen_size
         self.image = pg.image.load(images_paths[0])
@@ -111,7 +116,8 @@ class Asteroid(pg.sprite.Sprite):
 class Bang(pg.sprite.Sprite):
     def __init__(self, position):
         super().__init__()
-        self.images = [pg.image.load(x) for x in [os.path.join("assets", "bang.png"),
+        self.images = [pg.image.load(x) for x in 
+                       [os.path.join("assets", "bang.png"),
                        os.path.join("assets", "smallbang.png"),
                        os.path.join("assets", "supersmallbang.png")]]
         self.image = self.images[2]

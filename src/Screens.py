@@ -14,7 +14,7 @@ class State():
         self.game = game
         self.prev_state = None
         self.uimanager = pygame_gui.UIManager(self.game.SCREEN_SIZE,
-                                              os.path.join("themes", "theme.json"))
+                           os.path.join("themes", "theme.json"))
 
     def process_event(self, event):
         pass
@@ -39,8 +39,9 @@ class ControlsScreen(State):
 
         # tło
         self.background = pg.image.load(
-                            os.path.join("assets", "backgrounds", "background.png")) \
-                          .convert_alpha()
+                            os.path.join("assets",
+                                         "backgrounds",
+                                         "background.png")).convert_alpha()
 
         button_width, button_height = 400, 70
         rect = pg.Rect(0, 0, button_width*s, button_height*s)
@@ -69,8 +70,8 @@ class ControlsScreen(State):
     def render(self, display_surface):
         display_surface.blit(self.background, (0, 0))
         controls_image = pg.image.load(
-                            os.path.join("assets", "controls.png")) \
-                          .convert_alpha()
+                            os.path.join("assets",
+                                         "controls.png")).convert_alpha()
         display_surface.blit(controls_image, (0, 0))
         super().render(display_surface)
 
@@ -133,8 +134,9 @@ class MenuScreen(State):
 
         # tło
         self.background = pg.image.load(
-                            os.path.join("assets", "backgrounds", "background.png")) \
-                          .convert_alpha()
+                            os.path.join("assets",
+                                         "backgrounds",
+                                         "background.png")).convert_alpha()
 
         # logo
         self.logo_image = \
@@ -277,7 +279,8 @@ class ShipChoiceWindow(pygame_gui.elements.UIWindow):
                         'ui_element': self,
                         'ui_object_id': self.most_specific_combined_id
                     }
-                    pg.event.post(pg.event.Event(UserEvent.SHIP_PICKED, event_data))
+                    pg.event.post(pg.event.Event(UserEvent.SHIP_PICKED,
+                                                 event_data))
                     self.reset()
         super().process_event(event)
 
@@ -289,8 +292,9 @@ class ShipChoiceMenu(State):
 
         # tło
         self.background = pg.image.load(
-                            os.path.join("assets", "backgrounds", "background.png")) \
-                          .convert_alpha()
+                            os.path.join("assets",
+                                         "backgrounds",
+                                         "background.png")).convert_alpha()
 
         # statki
         self.ship_gap = 30
@@ -405,18 +409,21 @@ class GameScreen(State):
     def __init__(self, game):
         State.__init__(self, game)
         self.ships = pg.sprite.Group()
-        self.ships.add(Spaceship(game.game_canvas, game.player1_ship['image_surface'], 
+        self.ships.add(Spaceship(game.game_canvas,
+                                 game.player1_ship['image_surface'], 
                                  ['w', 'a', 's', 'd', 'q'],
                                  game.PLAYER1_ID))
-        self.ships.add(Spaceship(game.game_canvas, game.player2_ship['image_surface'], 
+        self.ships.add(Spaceship(game.game_canvas,
+                                 game.player2_ship['image_surface'], 
                                  ['up', 'left', 'down', 'right', 'space'],
                                  game.PLAYER2_ID))
         self.bullets = pg.sprite.Group()
         self.asteroids = pg.sprite.Group()
         self.bangs = pg.sprite.Group()
         self.background = pg.image.load(
-                            os.path.join("assets", "backgrounds", "space.png")) \
-                          .convert_alpha()
+                            os.path.join("assets",
+                                         "backgrounds",
+                                         "space.png")).convert_alpha()
         self.last_asteroid = 0
 
     def game_over(self, loser_id):
