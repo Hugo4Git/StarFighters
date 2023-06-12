@@ -1,5 +1,4 @@
 import pygame as pg
-import pygame
 import pygame_gui
 from random import uniform
 import os
@@ -264,7 +263,6 @@ class MenuScreen(State):
         self.game.reset_keys()
 
     def render(self, display_surface):
-        # display_surface.fill((0, 13, 107))
         display_surface.blit(self.background, (0, 0))
         rect = self.logo_image.get_rect(center = (960, 300))
         display_surface.blit(self.logo_image, rect)
@@ -670,14 +668,11 @@ class Game():
             if font == None:
                 font = self.font
             text_surface = font.render(text, True, color)
-            #text_surface.set_colorkey((0,0,0))
             text_rect = text_surface.get_rect()
             text_rect.center = (x, y)
             surface.blit(text_surface, text_rect)
 
         def load_assets(self):
-            # Create pointers to directories 
-            self.assets_dir = os.path.join("assets")
             self.font = pg.font.Font(size=30)
             self.retro_font_20 = pg.font.Font(
                                    os.path.join("assets", "PublicPixel.ttf"))
