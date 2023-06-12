@@ -4,10 +4,9 @@ from random import uniform
 import os
 import time
 
-# TODO
-# this should be changed, but I don't know where to put this
-SHIP_PICKED = pg.event.custom_type()
-GAME_OVER = pg.event.custom_type()
+class UserEvent():
+    SHIP_PICKED = pg.event.custom_type()
+    GAME_OVER = pg.event.custom_type()
 
 class Spaceship(pg.sprite.Sprite):
     def __init__(self, screen, color, controls, playerid):
@@ -61,7 +60,7 @@ class Spaceship(pg.sprite.Sprite):
             if self.life <= 0:
                 self.kill()
                 event_data = { 'killed_playerid': self.playerid }
-                pg.event.post(pg.event.Event(GAME_OVER, event_data))
+                pg.event.post(pg.event.Event(UserEvent.GAME_OVER, event_data))
 
 class Bullet(pg.sprite.Sprite):
     def __init__(self, screen, position, direction):
@@ -440,7 +439,7 @@ class ShipChoiceWindow(pygame_gui.elements.UIWindow):
                         'ui_element': self,
                         'ui_object_id': self.most_specific_combined_id
                     }
-                    pg.event.post(pg.event.Event(SHIP_PICKED, event_data))
+                    pg.event.post(pg.event.Event(UserEvent.SHIP_PICKED, event_data))
                     self.reset()
         super().process_event(event)
 
@@ -518,7 +517,7 @@ class ShipChoiceMenu(State):
                 self.choice_window.get_ship(self.game.PLAYER1_ID) 
             elif event.ui_element == self.player2_ship.button:
                 self.choice_window.get_ship(self.game.PLAYER2_ID) 
-        elif event.type == SHIP_PICKED:
+        elif event.type == UserEvent.SHIP_PICKED:
             if (event.playerid == self.game.PLAYER1_ID):
                 self.game.player1_ship = event.ship
                 self.player1_ship.set_image(event.ship['image_surface'])
@@ -590,7 +589,7 @@ class GameScreen(State):
         new_state.enter_state()
 
     def process_event(self, event):
-        if event.type == GAME_OVER:
+        if event.type == UserEvent.GAME_OVER:
             self.game_over(event.killed_playerid)
 
     def update(self, actions):
