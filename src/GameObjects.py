@@ -16,8 +16,8 @@ class Spaceship(pg.sprite.Sprite):
         self.inertia = pg.Vector2(0, 0)
         self.angle_speed = 3
         self.angle = 0
-        self._FRICTION = 0.98
-        self._MAX_INERTIA_LEN = 7
+        self.friction = 0.98
+        self.max_inertia_len = 7
         self.controls = controls
         self.reload = 0
         self.life = 5
@@ -41,10 +41,10 @@ class Spaceship(pg.sprite.Sprite):
                                self.position.copy(),
                                self.direction.copy()))
             self.reload = time.time()
-        if (self.inertia.length() > self._MAX_INERTIA_LEN):
-            self.inertia *= self._MAX_INERTIA_LEN / self.inertia.length()
+        if (self.inertia.length() > self.max_inertia_len):
+            self.inertia *= self.max_inertia_len / self.inertia.length()
         self.position += self.inertia
-        self.inertia *= self._FRICTION
+        self.inertia *= self.friction
         self.position[0] %= self.screen.get_width()
         self.position[1] %= self.screen.get_height()
         self.image = pg.transform.rotate(self.original, self.angle)
@@ -66,10 +66,9 @@ class Bullet(pg.sprite.Sprite):
         self.image = \
             pg.image.load(os.path.join("assets", "bullet.png")).convert_alpha()
         self.screen = screen
-        self.position = position + direction*100
         self.inertia = direction*8
         self.rect = self.image.get_rect()
-        self.rect.center = self.position
+        self.rect.center = position + direction*100
 
     def update(self, asteroids):
         self.rect.center += self.inertia
@@ -88,7 +87,7 @@ class Asteroid(pg.sprite.Sprite):
                  screen_size,
                  images_paths=[os.path.join("assets", "asteroid.png")]):
         super().__init__()
-        self._screen_size = screen_size
+        self.screen_size = screen_size
         self.image = pg.image.load(images_paths[0])
         s = 80 * uniform(0.9, 1.1)
         size = (s, s)
@@ -97,21 +96,21 @@ class Asteroid(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (uniform(0, screen_size[0]), 0)
 
-        self._inertia = pg.Vector2(uniform(-0.8, 0.8), uniform(0.2, 1))
+        self.inertia = pg.Vector2(uniform(-0.8, 0.8), uniform(0.2, 1))
         MIN_INERTIA_LENGTH = 2
         MAX_INERTIA_LENGTH = 4
         inertia_length = uniform(MIN_INERTIA_LENGTH, MAX_INERTIA_LENGTH)
-        self._inertia.scale_to_length(inertia_length) 
+        self.inertia.scale_to_length(inertia_length) 
 
     def update(self):
         if (
             self.rect.centerx < -self.rect.width or
             self.rect.centery < -self.rect.height or
-            self.rect.centerx > self._screen_size[0] + self.rect.width or
-            self.rect.centery > self._screen_size[1] + self.rect.height
+            self.rect.centerx > self.screen_size[0] + self.rect.width or
+            self.rect.centery > self.screen_size[1] + self.rect.height
         ):
             self.kill()
-        self.rect.center += self._inertia
+        self.rect.center += self.inertia
 
 class Bang(pg.sprite.Sprite):
     def __init__(self, position):

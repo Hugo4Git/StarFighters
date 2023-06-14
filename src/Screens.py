@@ -13,7 +13,7 @@ class State():
     def __init__(self, game):
         self.game = game
         self.prev_state = None
-        self.uimanager = pygame_gui.UIManager(self.game.SCREEN_SIZE,
+        self.uimanager = pygame_gui.UIManager(self.game.screen_size,
                            os.path.join("themes", "theme.json"))
 
     def process_event(self, event):
@@ -109,20 +109,20 @@ class GameOverScreen(State):
         self.game.reset_keys()
     
     def playerid_to_name(self, playerid):
-        if playerid == self.game.PLAYER1_ID:
-            return "Gracz 1"
-        elif playerid == self.game.PLAYER2_ID:
-            return "Gracz 2"
+        if playerid == self.game.player1_id:
+            return "gracz 1"
+        elif playerid == self.game.player2_id:
+            return "gracz 2"
 
     def get_ship(self, playerid):
-        if playerid == self.game.PLAYER1_ID:
+        if playerid == self.game.player1_id:
             return self.game.player1_ship
-        elif playerid == self.game.PLAYER2_ID:
+        elif playerid == self.game.player2_id:
             return self.game.player2_ship
 
     def render(self, display_surface):
         bg_rect = pg.Rect(0, 0, 950, 430)
-        bg_rect.center = (self.game.GAME_WIDTH/2, self.game.GAME_HEIGHT/2 + 10)
+        bg_rect.center = (self.game.game_width/2, self.game.game_height/2 + 10)
         bg_color = 'azure'
         pg.draw.rect(display_surface, bg_color, bg_rect)
 
@@ -130,13 +130,13 @@ class GameOverScreen(State):
         self.game.draw_text(display_surface,
                             message,
                             'black',
-                            self.game.GAME_WIDTH/2,
+                            self.game.game_width/2,
                             400,
                             self.game.retro_font_36)
 
         ship_width, ship_height = 150, 161
         rect = pg.Rect(0, 0, ship_width, ship_height)
-        rect.center = (self.game.GAME_WIDTH/2, self.game.GAME_HEIGHT/2)
+        rect.center = (self.game.game_width/2, self.game.game_height/2)
         scaled_ship = pg.transform.smoothscale( 
             self.get_ship(self.winnerid)['image_surface'],
             (ship_width, ship_height)
@@ -187,7 +187,7 @@ class MenuScreen(State):
         )
     
     def play(self):
-        new_state = ShipChoiceMenu(self.game)
+        new_state = ShipChoiceScreen(self.game)
         new_state.enter_state()
 
     def controls(self):
@@ -296,7 +296,7 @@ class ShipChoiceWindow(pygame_gui.elements.UIWindow):
         super().process_event(event)
 
 
-class ShipChoiceMenu(State):
+class ShipChoiceScreen(State):
     def __init__(self, game):
         super().__init__(game)
         s = self.game.SCALE
@@ -350,10 +350,10 @@ class ShipChoiceMenu(State):
         )
 
         self.choice_window = ShipChoiceWindow(
-            rect=pg.Rect(0, 0, self.game.GAME_WIDTH*s, self.game.GAME_HEIGHT*s),
+            rect=pg.Rect(0, 0, self.game.game_width*s, self.game.game_height*s),
             manager=self.uimanager,
             scale=s,
-            ships=self.game.SHIPS
+            ships=self.game.ships
         )
 
     def play(self):
@@ -367,14 +367,14 @@ class ShipChoiceMenu(State):
             elif event.ui_element == self.back_button:
                 self.exit_state()
             elif event.ui_element == self.player1_ship.button:
-                self.choice_window.get_ship(self.game.PLAYER1_ID) 
+                self.choice_window.get_ship(self.game.player1_id) 
             elif event.ui_element == self.player2_ship.button:
-                self.choice_window.get_ship(self.game.PLAYER2_ID) 
+                self.choice_window.get_ship(self.game.player2_id) 
         elif event.type == UserEvent.SHIP_PICKED:
-            if (event.playerid == self.game.PLAYER1_ID):
+            if (event.playerid == self.game.player1_id):
                 self.game.player1_ship = event.ship
                 self.player1_ship.set_image(event.ship['image_surface'])
-            elif (event.playerid == self.game.PLAYER2_ID):
+            elif (event.playerid == self.game.player2_id):
                 self.game.player2_ship = event.ship
                 self.player2_ship.set_image(event.ship['image_surface'])
         self.uimanager.process_events(event)
@@ -418,11 +418,11 @@ class GameScreen(State):
         self.ships.add(Spaceship(game.game_canvas,
                                  game.player1_ship['image_surface'], 
                                  ['w', 'a', 's', 'd', 'q'],
-                                 game.PLAYER1_ID))
+                                 game.player1_id))
         self.ships.add(Spaceship(game.game_canvas,
                                  game.player2_ship['image_surface'], 
                                  ['up', 'left', 'down', 'right', 'space'],
-                                 game.PLAYER2_ID))
+                                 game.player2_id))
         self.bullets = pg.sprite.Group()
         self.asteroids = pg.sprite.Group()
         self.bangs = pg.sprite.Group()
@@ -433,9 +433,9 @@ class GameScreen(State):
         self.last_asteroid = 0
 
     def game_over(self, loser_id):
-        winner_id = self.game.PLAYER2_ID \
-                    if loser_id == self.game.PLAYER1_ID \
-                    else self.game.PLAYER1_ID
+        winner_id = self.game.player2_id \
+                    if loser_id == self.game.player1_id \
+                    else self.game.player1_id
         new_state = GameOverScreen(self.game, winner_id)
         new_state.enter_state()
 
@@ -448,7 +448,7 @@ class GameScreen(State):
             self.game.reset_keys()
             self.exit_state()
         if int(time.time()) > self.last_asteroid:
-            self.asteroids.add(Asteroid(self.game.GAME_SIZE))
+            self.asteroids.add(Asteroid(self.game.game_size))
             self.last_asteroid = int(time.time())
 
         self.ships.update(actions, self.bullets, self.asteroids, self.bangs)
