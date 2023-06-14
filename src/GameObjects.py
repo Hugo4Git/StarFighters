@@ -4,16 +4,23 @@ from random import uniform
 from UserEvent import UserEvent
 import time
 
-class Spaceship(pg.sprite.Sprite):
-    def __init__(self, screen, color, controls, playerid):
+class FlyingObject(pg.sprite.Sprite):
+    def __init__(self, image, position, inertia = pg.Vector2(0, 0)):
         super().__init__()
-        self.original = color
-        self.image = self.original
+        self.image = image
+        self.rect = self.image.get_rect()
+        self.position = position
+        self.rect.center = position
+        self.inertia = inertia.copy()
+
+class Spaceship(FlyingObject):
+    def __init__(self, screen, image, controls, playerid):
+        position = pg.Vector2(uniform(0, screen.get_width()),
+                              uniform(0, screen.get_height()))
+        super().__init__(image, position)
+        self.original = image
         self.screen = screen
-        self.position = pg.Vector2(uniform(0, screen.get_width()),
-                                   uniform(0, screen.get_height()))
         self.direction = pg.Vector2(0, -1)
-        self.inertia = pg.Vector2(0, 0)
         self.angle_speed = 3
         self.angle = 0
         self.friction = 0.98
@@ -21,8 +28,6 @@ class Spaceship(pg.sprite.Sprite):
         self.controls = controls
         self.reload = 0
         self.life = 5
-        self.rect = self.image.get_rect()
-        self.rect.center = self.position
         self.playerid = playerid
 
     def update(self, actions, bullets, asteroids, bangs):
@@ -60,15 +65,12 @@ class Spaceship(pg.sprite.Sprite):
                 event_data = { 'killed_playerid': self.playerid }
                 pg.event.post(pg.event.Event(UserEvent.GAME_OVER, event_data))
 
-class Bullet(pg.sprite.Sprite):
+class Bullet(FlyingObject):
     def __init__(self, screen, position, direction):
-        super().__init__()
-        self.image = \
+        image = \
             pg.image.load(os.path.join("assets", "bullet.png")).convert_alpha()
+        super().__init__(image, position + direction*100, direction*8)
         self.screen = screen
-        self.inertia = direction*8
-        self.rect = self.image.get_rect()
-        self.rect.center = position + direction*100
 
     def update(self, asteroids):
         self.rect.center += self.inertia
@@ -82,13 +84,12 @@ class Bullet(pg.sprite.Sprite):
         if pg.sprite.spritecollide(self, asteroids, True):
             self.kill()
 
-class Asteroid(pg.sprite.Sprite):
-    def __init__(self,
-                 screen_size,
-                 images_paths=[os.path.join("assets", "asteroid.png")]):
-        super().__init__()
+class Asteroid(FlyingObject):
+    def __init__(self, screen_size):
+        image = pg.image.load(os.path.join("assets", "asteroid.png"))
+        inertia = pg.Vector2(uniform(-0.8, 0.8), uniform(0.2, 1))
+        super().__init__(image, (0, 0), inertia)
         self.screen_size = screen_size
-        self.image = pg.image.load(images_paths[0])
         s = 80 * uniform(0.9, 1.1)
         size = (s, s)
         self.image = pg.transform.scale(self.image, size)
@@ -96,7 +97,6 @@ class Asteroid(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (uniform(0, screen_size[0]), 0)
 
-        self.inertia = pg.Vector2(uniform(-0.8, 0.8), uniform(0.2, 1))
         MIN_INERTIA_LENGTH = 2
         MAX_INERTIA_LENGTH = 4
         inertia_length = uniform(MIN_INERTIA_LENGTH, MAX_INERTIA_LENGTH)
