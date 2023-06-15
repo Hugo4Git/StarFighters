@@ -4,6 +4,7 @@ from random import uniform
 from UserEvent import UserEvent
 import time
 
+# Klasa reprezentująca obiekt latający w kosmosie.
 class FlyingObject(pg.sprite.Sprite):
     def __init__(self, image, position, inertia = pg.Vector2(0, 0)):
         super().__init__()
@@ -13,6 +14,7 @@ class FlyingObject(pg.sprite.Sprite):
         self.rect.center = position
         self.inertia = inertia.copy()
 
+# Klasa reprezentująca statek kosmiczny.
 class Spaceship(FlyingObject):
     def __init__(self, screen, image, controls, playerid):
         position = pg.Vector2(uniform(0, screen.get_width()),
@@ -30,6 +32,7 @@ class Spaceship(FlyingObject):
         self.life = 5
         self.playerid = playerid
 
+    # Aktualizacja pozycji statku, wykrywanie kolizji z innymi obiektami.
     def update(self, actions, bullets, asteroids, bangs):
         if (actions[self.controls[0]]):
             self.inertia += self.direction * 0.2
@@ -65,6 +68,7 @@ class Spaceship(FlyingObject):
                 event_data = { 'killed_playerid': self.playerid }
                 pg.event.post(pg.event.Event(UserEvent.GAME_OVER, event_data))
 
+# Klasa reprezentująca pocisk.
 class Bullet(FlyingObject):
     def __init__(self, screen, position, direction):
         image = \
@@ -72,6 +76,7 @@ class Bullet(FlyingObject):
         super().__init__(image, position + direction*100, direction*8)
         self.screen = screen
 
+    # Aktualizacjia pozycji i wykrywanie kolizji.
     def update(self, asteroids):
         self.rect.center += self.inertia
         if (
@@ -84,6 +89,7 @@ class Bullet(FlyingObject):
         if pg.sprite.spritecollide(self, asteroids, True):
             self.kill()
 
+# Klasa reprezentująca asteroidę.
 class Asteroid(FlyingObject):
     def __init__(self, screen_size):
         image = pg.image.load(os.path.join("assets", "asteroid.png"))
@@ -102,6 +108,7 @@ class Asteroid(FlyingObject):
         inertia_length = uniform(MIN_INERTIA_LENGTH, MAX_INERTIA_LENGTH)
         self.inertia.scale_to_length(inertia_length) 
 
+    # Aktualizacja pozycji.
     def update(self):
         if (
             self.rect.centerx < -self.rect.width or
@@ -112,6 +119,7 @@ class Asteroid(FlyingObject):
             self.kill()
         self.rect.center += self.inertia
 
+# Klasa reprezentująca wybuch.
 class Bang(pg.sprite.Sprite):
     def __init__(self, position):
         super().__init__()
@@ -123,6 +131,7 @@ class Bang(pg.sprite.Sprite):
         self.stime = time.time()
         self.rect = self.image.get_rect(center = position)
 
+    # Zmiana wyglądu wybuchu zależnie od czasu.
     def update(self):
         if time.time() > self.stime + 0.1:
             self.image = self.images[1]

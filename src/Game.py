@@ -3,7 +3,11 @@ import os
 
 from Screens import MenuScreen
 
+# Klasa zawierająca główną pętlę gry oraz metody służące do jej
+# rozpoczęcia.
 class Game():
+    # Konstrukcja gry. Utworzenie odpowiednich zmiennych przechowujących
+    # dane o grze i jej stanie.
     def __init__(self):
         pg.init()
         pg.mixer.init()
@@ -41,7 +45,8 @@ class Game():
         self.frame_rate = 60
         self.clock = pg.time.Clock()
 
-
+    # Pętla gry: przetwarzenie akcji graczy i odpowiednie modyfikacje
+    # obiektów.
     def game_loop(self):
         while self.playing:
             self.time_delta = self.clock.tick(self.frame_rate)
@@ -49,6 +54,8 @@ class Game():
             self.update()
             self.render()
 
+    # Zapisywanie akcji graczy w odpowiednich zmiennych,
+    # rejestrowanie naciśniętych przycisków.
     def get_events(self):
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -118,9 +125,11 @@ class Game():
 
             self.state_stack[-1].process_event(event)
 
+    # Metoda przetwarzająca zmiany w grze.
     def update(self):
         self.state_stack[-1].update(self.actions)
 
+    # Metoda rusująca grę na ekranie.
     def render(self):
         self.screen.blit(pg.transform.smoothscale(self.game_canvas,
                                                   self.screen_size),
@@ -128,6 +137,7 @@ class Game():
         self.state_stack[-1].render(self.game_canvas)
         pg.display.update()
 
+    # Metoda wypisująca tekst w grze.
     def draw_text(self, surface, text, color, x, y, font = None):
         if font == None:
             font = self.font.retro_font_20
@@ -136,6 +146,7 @@ class Game():
         text_rect.center = (x, y)
         surface.blit(text_surface, text_rect)
 
+    # Wczytywanie zasobów używanych w grze.
     def load_assets(self):
         self.retro_font_20 = pg.font.Font(
                                 os.path.join("assets", "PublicPixel.ttf"))
@@ -170,19 +181,23 @@ class Game():
             for name in ship_names
         ]
     
+    # Wczytanie danych o graczach i ich statkach.
     def load_players(self):
         self.player1_id = 0
         self.player2_id = 1
         self.player1_ship = self.ships[0]
         self.player2_ship = self.ships[1]
 
+    # Wczytanie stanów gry.
     def load_states(self):
         title_screen = MenuScreen(self)
         self.state_stack.append(title_screen)
 
+    # Zresetowanie danych o naciśniętych przyciskach.
     def reset_keys(self):
         for action in self.actions:
             self.actions[action] = False
 
+    # Destruktor kończący grę
     def __del__(self):
         pg.quit()
