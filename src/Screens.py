@@ -8,7 +8,8 @@ from UserEvent import UserEvent
 from GameObjects import Spaceship
 from GameObjects import Asteroid
 
-# klasa abstrakcyjna
+# Klasa abstrakcyjna reprezentująca stan programu. Wykorzystywana do tworzenia
+# ekranów (menu głównego, menu wyboru statków etc.).
 class State():
     def __init__(self, game):
         self.game = game
@@ -16,22 +17,31 @@ class State():
         self.uimanager = pygame_gui.UIManager(self.game.screen_size,
                            os.path.join("themes", "theme.json"))
 
+    # Metoda przetwarzająca zdarzenia (np. kliknięcia przycisków,
+    # naciśnięcia klawiszy).
     def process_event(self, event):
         pass
+
+    # Aktualizuje stan obiektów na ekranie (np. zmienia pozycję statków).
     def update(self, actions):
         self.uimanager.update(self.game.time_delta)
+
+    # Rysuje na ekranie to, co powinno być widoczne dla użytkownika.
     def render(self, display_surface):
         self.uimanager.draw_ui(self.game.screen)
 
+    # Zmienia globalny stan programu, otwierając nowy ekran.
     def enter_state(self):
         if len(self.game.state_stack) > 1:
             self.prev_state = self.game.state_stack[-1]
         self.game.state_stack.append(self)
 
+    # Zamyka ekran.
     def exit_state(self, count=1):
         for i in range(count):
             self.game.state_stack.pop()
 
+# Ekran, na którym znajduje się instrukcja sterowania grą.
 class ControlsScreen(State):
     def __init__(self, game):
         super().__init__(game)
@@ -75,6 +85,7 @@ class ControlsScreen(State):
         display_surface.blit(controls_image, (0, 0))
         super().render(display_surface)
 
+# Ekran końca gry. Pokazuje, który gracz wygrał i jaki statek pilotował.
 class GameOverScreen(State):
     def __init__(self, game, winnerid):
         super().__init__(game)
@@ -144,6 +155,8 @@ class GameOverScreen(State):
         display_surface.blit(scaled_ship, rect)
         super().render(display_surface)
 
+# Ekran głównego menu gry. Jego głównym zadaniem jest otwieranie odpowiednich,
+# nowych ekranów po kliknięciu przycisku z menu lub wciśnięciu klawisza.
 class MenuScreen(State):
     def __init__(self, game):
         super().__init__(game)
@@ -218,6 +231,8 @@ class MenuScreen(State):
         display_surface.blit(self.logo_image, rect)
         super().render(display_surface)
 
+# Okno wyświetlane na ekranie wyboru statków (ShipChoiceScreen), pozwalające
+# graczowi wybrać inny statek.
 class ShipChoiceWindow(pygame_gui.elements.UIWindow):
     def __init__(self, rect, manager, scale, ships, gap = 30):
         s = scale
@@ -231,7 +246,7 @@ class ShipChoiceWindow(pygame_gui.elements.UIWindow):
         )
         super().set_blocking(True)
 
-        # obrazki-przyciski statków
+        # Utworzenie obrazków-przycisków statków.
         self.ships = ships
         self.ships_image_buttons = []
         next_x_pos, next_y_pos = gap*s, gap*s
@@ -253,7 +268,7 @@ class ShipChoiceWindow(pygame_gui.elements.UIWindow):
                 next_x_pos = gap*s
                 next_y_pos += ship_button_height*s + gap*s
 
-        # przycisk do anulowania
+        # Utworzenie przycisku do anulowania wyboru.
         rect = pg.Rect(0, 0, 200*s, 70*s)
         rect.centerx = 960*s
         rect.centery = 950*s
@@ -267,13 +282,17 @@ class ShipChoiceWindow(pygame_gui.elements.UIWindow):
 
         self.chosen_ship = None
 
+    # Nadpisanie metody z klasy okna (UIWindow), by stawało się ukryte,
+    # ale nie było niszczone przy naciśnięciu przycisku 'X'.
     def on_close_window_button_pressed(self):
         self.hide()
 
+    # Wyświetla okno.
     def get_ship(self, playerid):
         self.show()
         self.playerid = playerid
     
+    # Ukrywa okno.
     def reset(self):
         self.hide()
         self.playerid = None
@@ -295,7 +314,8 @@ class ShipChoiceWindow(pygame_gui.elements.UIWindow):
                     self.reset()
         super().process_event(event)
 
-
+# Ekran wyboru statków. Po kliknięciu na statek otwiera okno, w którym gracz
+# może go zmienić. Po kliknięciu przycisku "Graj" otwiera ekran właściwej gry.
 class ShipChoiceScreen(State):
     def __init__(self, game):
         super().__init__(game)
@@ -356,6 +376,7 @@ class ShipChoiceScreen(State):
             ships=self.game.ships
         )
 
+    # Przechodzi do ekranu rozgrywki.
     def play(self):
         new_state = GameScreen(self.game)
         new_state.enter_state()
@@ -411,6 +432,8 @@ class ShipChoiceScreen(State):
                             self.game.retro_font_36)
         super().render(display_surface)
 
+# Ekran rozgrywki. Tworzy statki, asteroidy i inne obiekty występujące w grze.
+# Po zniszczeniu jednego ze statków otwiera ekran końca gry (GameOverScreen).
 class GameScreen(State):
     def __init__(self, game):
         State.__init__(self, game)
