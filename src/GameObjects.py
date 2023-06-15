@@ -1,3 +1,9 @@
+# Jakub Dubiel 339630, Hubert Dyczkowski 338590
+# StarFighters, wersja 1.0
+# Projekt końcowy, PO
+
+# Obiekty używane podczas rozgrywki.
+
 import pygame as pg
 import os
 from random import uniform

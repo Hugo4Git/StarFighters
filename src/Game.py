@@ -1,3 +1,9 @@
+# Jakub Dubiel 339630, Hubert Dyczkowski 338590
+# StarFighters, wersja 1.0
+# Projekt końcowy, PO
+
+# Główny obiekt gry.
+
 import pygame as pg
 import os
 
@@ -13,7 +19,7 @@ class Game():
         pg.mixer.music.load(os.path.join("assets", "bass.wav"))
         pg.mixer.music.play(-1)
         self.game_size = self.game_width, self.game_height = 1920, 1080
-        self.SCALE = 2 / 3
+        self.SCALE = 2/3
         self.screen_size = self.screen_width, self.screen_height = \
             (int(self.game_width * self.SCALE),
              int(self.game_height * self.SCALE))
@@ -44,7 +50,7 @@ class Game():
         self.frame_rate = 60
         self.clock = pg.time.Clock()
 
-    # Pętla gry: przetwarzenie akcji graczy i odpowiednie modyfikacje obiektów.
+    # Pętla gry: przetwarzenie zdarzeń i odpowiednie modyfikacje obiektów.
     def game_loop(self):
         while self.running:
             self.time_delta = self.clock.tick(self.frame_rate)
@@ -52,7 +58,7 @@ class Game():
             self.update()
             self.render()
 
-    # Zapisywanie akcji graczy w odpowiednich zmiennych,
+    # Zapisywanie zdarzeń w odpowiednich zmiennych,
     # rejestrowanie naciśniętych przycisków.
     def get_events(self):
         for event in pg.event.get():

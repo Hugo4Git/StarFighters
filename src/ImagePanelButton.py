@@ -1,3 +1,9 @@
+# Jakub Dubiel 339630, Hubert Dyczkowski 338590
+# StarFighters, wersja 1.0
+# Projekt końcowy, PO
+
+# Przycisk z obrazkiem.
+
 import pygame as pg
 import pygame_gui
 
