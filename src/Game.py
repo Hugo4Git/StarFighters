@@ -3,8 +3,7 @@ import os
 
 from Screens import MenuScreen
 
-# Klasa zawierająca główną pętlę gry oraz metody służące do jej
-# rozpoczęcia.
+# Klasa zawierająca główną pętlę gry oraz metody służące do jej rozpoczęcia.
 class Game():
     # Konstrukcja gry. Utworzenie odpowiednich zmiennych przechowujących
     # dane o grze i jej stanie.
@@ -45,8 +44,7 @@ class Game():
         self.frame_rate = 60
         self.clock = pg.time.Clock()
 
-    # Pętla gry: przetwarzenie akcji graczy i odpowiednie modyfikacje
-    # obiektów.
+    # Pętla gry: przetwarzenie akcji graczy i odpowiednie modyfikacje obiektów.
     def game_loop(self):
         while self.playing:
             self.time_delta = self.clock.tick(self.frame_rate)
@@ -129,7 +127,7 @@ class Game():
     def update(self):
         self.state_stack[-1].update(self.actions)
 
-    # Metoda rusująca grę na ekranie.
+    # Metoda rysująca grę na ekranie.
     def render(self):
         self.screen.blit(pg.transform.smoothscale(self.game_canvas,
                                                   self.screen_size),
@@ -198,6 +196,6 @@ class Game():
         for action in self.actions:
             self.actions[action] = False
 
-    # Destruktor kończący grę
+    # Destruktor kończący grę.
     def __del__(self):
         pg.quit()
