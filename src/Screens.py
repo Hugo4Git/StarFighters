@@ -215,7 +215,6 @@ class MenuScreen(State):
                 self.controls()
             elif event.ui_element == self.exit_button:
                 self.game.running = False
-                self.game.playing = False
         self.uimanager.process_events(event)
 
     def update(self, actions):

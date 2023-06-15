@@ -19,7 +19,7 @@ class Game():
              int(self.game_height * self.SCALE))
         self.game_canvas = pg.Surface(self.game_size)
         self.screen = pg.display.set_mode(self.screen_size)
-        self.running, self.playing = True, True
+        self.running = True
 
         self.actions = {
             "up" : False,
@@ -46,7 +46,7 @@ class Game():
 
     # Pętla gry: przetwarzenie akcji graczy i odpowiednie modyfikacje obiektów.
     def game_loop(self):
-        while self.playing:
+        while self.running:
             self.time_delta = self.clock.tick(self.frame_rate)
             self.get_events()
             self.update()
@@ -57,11 +57,9 @@ class Game():
     def get_events(self):
         for event in pg.event.get():
             if event.type == pg.QUIT:
-                self.playing = False
                 self.running = False
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_ESCAPE:
-                    self.playing = False
                     self.running = False
                 if event.key == pg.K_LEFT:
                     self.actions['left'] = True
